@@ -95,7 +95,7 @@ export DRONE_IP="192.168.42.1"  # For WiFi connection
 #### 3. Navigate to the Project Directory
 
 ```bash
-cd "/Users/innocentchikwanda/Desktop/Grad School/Agile SE/EcoDrone"
+cd /path/to/EcoDrone
 ```
 
 #### 4. Run the Script
