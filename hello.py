@@ -3,7 +3,7 @@ import os
 import time
 from olympe.messages.ardrone3.Piloting import TakeOff, Landing
 
-DRONE_IP = os.environ.get("DRONE_IP", "10.202.0.1")
+DRONE_IP = os.environ.get("DRONE_IP", "192.168.42.1")
 
 
 def test_takeoff():
