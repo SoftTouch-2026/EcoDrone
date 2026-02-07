@@ -4,7 +4,49 @@ A sustainable drone-powered delivery system
 ## Overview
 This project implements an autonomous drone-based delivery system using the Parrot ANAFI Ai drone. The system architecture includes a Progressive Web App (PWA), cloud backend, Raspberry Pi drone control layer, and the ANAFI Ai drone running the Air SDK.
 
-## Quick Start: Running the Takeoff Test Script
+## Epic 1 Demonstration: Interactive Drone Control
+
+The core deliverable for Epic 1 is the interactive `demo_epic1.py` script. This script provides a command-line interface (CLI) for controlling the drone, monitoring battery health, and managing unique drone identities.
+
+### Features
+- **Interactive CLI**: Control flight, navigation, and status in real-time.
+- **Robust Identification**: Uses internal serial number for persistent drone tracking.
+- **Battery Monitoring**: Live battery updates and safety checks.
+- **Registry System**: Tracks known drones in `data/drones.json`.
+
+### Running the Demo
+
+1. **Activate Olympe Environment**:
+   ```bash
+   source ~/code/parrot-olympe/shell
+   ```
+2. **Run the Script**:
+   ```bash
+   python3 demo_epic1.py
+   ```
+
+### Interactive Commands
+
+Once connected, use the following commands at the prompt:
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `takeoff [alt]` | Take off to specific altitude (default: 10m) | `takeoff 15` |
+| `land` | Land the drone | `land` |
+| `move <fwd> <right> <up> [rot]` | Move relative (meters) with optional rotation (degrees) | `move 5 0 2 90` |
+| `goto <lat> <lon> [alt]` | Fly to specific GPS coordinates | `goto 48.86 2.35 20` |
+| `battery` | Show current battery level | `battery` |
+| `status` | Show comprehensive drone status & ID | `status` |
+| `list` | List all registered drones | `list` |
+| `reset` | Clear the drone registry (fixes "ghost drone" issues) | `reset` |
+| `quit` | Land and disconnect | `quit` |
+
+> [!TIP]
+> Use `reset` if you see duplicate or old drone entries in the registry.
+
+---
+
+## Basic Connectivity Test: hello.py
 
 The `hello.py` script demonstrates basic drone control by executing a simple takeoff and landing sequence using the Parrot Olympe SDK.
 
