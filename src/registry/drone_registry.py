@@ -7,8 +7,8 @@ import json
 import os
 from typing import List, Optional, Dict
 
-from ..models.drone_model import Drone
-from ..config import DRONE_REGISTRY_FILE
+from models.drone_model import Drone
+from config import DRONE_REGISTRY_FILE
 
 
 class DroneRegistry:
@@ -60,7 +60,7 @@ class DroneRegistry:
             battery_capacity=battery_capacity,
             min_battery_level=min_battery_level,
             status="active",
-            current_battery_level=100
+            current_battery_level=0
         )
         
         self.drones[drone_id] = drone

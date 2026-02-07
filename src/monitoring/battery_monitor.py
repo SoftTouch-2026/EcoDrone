@@ -8,8 +8,8 @@ import os
 from datetime import datetime
 from typing import List, Dict, Optional
 
-from ..models.drone_model import Drone
-from ..config import BATTERY_LOGS_FILE, MIN_BATTERY_LEVEL, LOW_BATTERY_WARNING
+from models.drone_model import Drone
+from config import BATTERY_LOGS_FILE, MIN_BATTERY_LEVEL, LOW_BATTERY_WARNING
 
 
 class BatteryMonitor:

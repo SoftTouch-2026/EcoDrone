@@ -14,8 +14,8 @@ from olympe.messages.ardrone3.Piloting import TakeOff, Landing, moveBy, moveTo
 from olympe.messages.ardrone3.PilotingState import FlyingStateChanged, PositionChanged
 from olympe.messages.common.CommonState import BatteryStateChanged
 
-from ..models.drone_model import Drone
-from ..config import DEFAULT_TAKEOFF_ALTITUDE
+from models.drone_model import Drone
+from config import DEFAULT_TAKEOFF_ALTITUDE
 
 
 class DroneController:

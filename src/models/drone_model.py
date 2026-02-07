@@ -33,7 +33,7 @@ class Drone:
         battery_capacity: int = 4900,
         min_battery_level: int = 20,
         status: str = "inactive",
-        current_battery_level: int = 100,
+        current_battery_level: int = 0,
         current_location: Optional[Dict[str, float]] = None,
         registration_date: Optional[str] = None,
         last_flight_date: Optional[str] = None

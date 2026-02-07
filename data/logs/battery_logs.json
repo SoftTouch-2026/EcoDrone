@@ -1,0 +1,20 @@
+[
+  {
+    "timestamp": "2026-02-07T17:13:29.004016",
+    "drone_id": "DRONE-ANAFI_Ai_004668",
+    "battery_level": 58,
+    "event_type": "pre_flight_check"
+  },
+  {
+    "timestamp": "2026-02-07T17:21:38.241342",
+    "drone_id": "DRONE-ANAFI_Ai_004668",
+    "battery_level": 49,
+    "event_type": "pre_flight_check"
+  },
+  {
+    "timestamp": "2026-02-07T17:26:40.410835",
+    "drone_id": "DRONE-ANAFI_Ai_004668",
+    "battery_level": 34,
+    "event_type": "pre_flight_check"
+  }
+]

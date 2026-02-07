@@ -1,0 +1,18 @@
+{
+  "DRONE-ANAFI_Ai_004668": {
+    "drone_id": "DRONE-ANAFI_Ai_004668",
+    "name": "EcoDrone 004668",
+    "ip_address": "192.168.42.1",
+    "battery_capacity": 4900,
+    "min_battery_level": 20,
+    "status": "active",
+    "current_battery_level": 34,
+    "current_location": {
+      "lat": 0.0,
+      "lon": 0.0,
+      "alt": 0.0
+    },
+    "registration_date": "2026-02-07T17:13:28.996008",
+    "last_flight_date": null
+  }
+}
