@@ -28,7 +28,7 @@ All three user stories for Epic 1 "Drone on a Leash" have been successfully impl
 
 ### Run Demo:
 ```bash
-python3 demo_epic1.py
+python3 sprint1.py
 ```
 
 ### Run Admin CLI:
