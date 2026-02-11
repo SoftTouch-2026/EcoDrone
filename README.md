@@ -46,6 +46,77 @@ Once connected, use the following commands at the prompt:
 
 ---
 
+## Sprint 0: Web-Based Control System 🚁
+
+### Architecture
+
+```
+┌─────────────────────┐     HTTP API      ┌─────────────────────┐     Olympe SDK     ┌─────────────────┐
+│   React Frontend    │ ◄───────────────► │   Flask Backend     │ ◄────────────────► │  ANAFI Ai Drone │
+│   (index.html)      │     Port 5000     │   (app.py)          │                    │                 │
+│                     │                   │                     │                    │  WiFi Direct:   │
+│ [🚀 LAUNCH] [🛬 LAND]│                   │  /api/connect       │                    │  192.168.42.1   │
+│  Status Dashboard   │                   │  /api/takeoff       │                    │                 │
+│  Battery & Altitude │                   │  /api/land          │                    │  Simulator:     │
+└─────────────────────┘                   │  /api/status        │                    │  10.202.0.1     │
+                                          └─────────────────────┘                    └─────────────────┘
+```
+
+### Running the Web Interface
+
+#### Quick Start Script
+
+The easiest way to run both backend and frontend together:
+
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+Then open http://localhost:8080 in your browser.
+
+#### Manual Setup
+
+**Terminal 1: Start the Backend API**
+
+```bash
+cd backend
+source ../venv/bin/activate  # If not already activated
+
+# For simulation mode (no physical drone needed)
+export DRONE_CONNECTION_MODE=simulation
+python app.py
+
+# For physical drone via WiFi
+export DRONE_CONNECTION_MODE=wifi
+python app.py
+```
+
+**Terminal 2: Open the Frontend**
+
+```bash
+cd frontend
+python -m http.server 8080
+# Then open http://localhost:8080 in your browser
+```
+
+### API Reference
+
+Base URL: `http://localhost:5000`
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | API information |
+| GET | `/api/status` | Get current drone status |
+| POST | `/api/connect` | Connect to drone |
+| POST | `/api/disconnect` | Disconnect from drone |
+| POST | `/api/takeoff` | Take off to 10m |
+| POST | `/api/land` | Land the drone |
+| GET | `/api/health` | Health check |
+| GET | `/api/info` | API and drone info |
+
+---
+
 ## Basic Connectivity Test: hello.py
 
 The `hello.py` script demonstrates basic drone control by executing a simple takeoff and landing sequence using the Parrot Olympe SDK.
@@ -203,7 +274,7 @@ For more detailed information about the EcoDrone system architecture and design:
 ## Technology Stack
 
 - **Drone Control**: Python 3 + Parrot Olympe SDK
-- **Backend**: FastAPI + PostgreSQL + Redis
+- **Backend**: FastAPI + PostgreSQL + Redis / Flask (Sprint 0)
 - **Frontend**: React + TypeScript PWA
 - **Drone Hardware**: Parrot ANAFI Ai with Air SDK
 
