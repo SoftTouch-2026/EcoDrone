@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoDrone Ground Station - Operator Interface</title>
+
+    <!-- React and Babel for in-browser JSX -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts - Inter (similar to SpaceX's D-DIN) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'spacex-white': 'rgba(240, 240, 250, 1)',
+                        'spacex-white-90': 'rgba(240, 240, 250, 0.9)',
+                        'spacex-white-80': 'rgba(240, 240, 250, 0.8)',
+                        'spacex-white-70': 'rgba(240, 240, 250, 0.7)',
+                        'spacex-white-60': 'rgba(240, 240, 250, 0.6)',
+                        'spacex-white-50': 'rgba(240, 240, 250, 0.5)',
+                        'spacex-white-40': 'rgba(240, 240, 250, 0.4)',
+                        'spacex-white-30': 'rgba(240, 240, 250, 0.3)',
+                        'spacex-white-15': 'rgba(240, 240, 250, 0.15)',
+                        'spacex-white-10': 'rgba(240, 240, 250, 0.1)',
+                        'spacex-white-05': 'rgba(240, 240, 250, 0.05)',
+                        'spacex-card': 'rgba(255, 255, 255, 0.03)',
+                        'spacex-card-hover': 'rgba(255, 255, 255, 0.06)',
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-weight: 400;
+            background-color: #000;
+            color: rgba(240, 240, 250, 1);
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.8);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1.4);
+                opacity: 0;
+            }
+        }
+
+        @keyframes slide-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .mission-notification {
+            animation: slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+
+        .pulse-ring::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            animation: pulse-ring 1.5s ease-out infinite;
+        }
+
+        /* SpaceX-style minimal scrollbar */
+        .scrollable::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .scrollable::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .scrollable::-webkit-scrollbar-thumb {
+            background: rgba(240, 240, 250, 0.2);
+            border-radius: 2px;
+        }
+
+        .scrollable::-webkit-scrollbar-thumb:hover {
+            background: rgba(240, 240, 250, 0.3);
+        }
+
+        /* SpaceX-style card styling - sharp corners, subtle borders */
+        .spacex-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(240, 240, 250, 0.1);
+        }
+
+        .spacex-card:hover {
+            border-color: rgba(240, 240, 250, 0.2);
+        }
+
+        .spacex-card-subtle {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(240, 240, 250, 0.05);
+        }
+
+        /* SpaceX-style data row - horizontal separator */
+        .spacex-data-row {
+            border-bottom: 1px solid rgba(240, 240, 250, 0.1);
+            padding: 12px 0;
+        }
+
+        .spacex-data-row:last-child {
+            border-bottom: none;
+        }
+
+        /* SpaceX button styles */
+        button {
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .spacex-btn-primary {
+            background: rgba(240, 240, 250, 1);
+            color: #000;
+            border: 1px solid rgba(240, 240, 250, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 500;
+        }
+
+        .spacex-btn-primary:hover {
+            background: rgba(240, 240, 250, 0.9);
+        }
+
+        .spacex-btn-outline {
+            background: transparent;
+            color: rgba(240, 240, 250, 1);
+            border: 1px solid rgba(240, 240, 250, 0.35);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 500;
+        }
+
+        .spacex-btn-outline:hover {
+            border-color: rgba(240, 240, 250, 0.6);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* SpaceX uppercase label */
+        .spacex-label {
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.75rem;
+            color: rgba(240, 240, 250, 0.5);
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body class="bg-black min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useRef } = React;
+
+        // ============================================================
+        // CONFIGURATION
+        // ============================================================
+        const API_BASE_URL = 'http://localhost:8080'; // Ground Station API
+        const GROUND_STATION_ID = 'GS-001';
+
+        // ============================================================
+        // COMPONENTS
+        // ============================================================
+
+        // Safety Checklist Component
+        const SafetyChecklist = ({ mission }) => {
+            const checks = mission?.safety_checklist || {};
+
+            const checkItems = [
+                { key: 'battery_sufficient', label: 'Battery Level Sufficient', icon: '⚡' },
+                { key: 'within_geofence', label: 'Route Within Geofence', icon: '◎' },
+                { key: 'weather_acceptable', label: 'Weather Conditions OK', icon: '○' },
+                { key: 'no_airspace_conflicts', label: 'No Airspace Conflicts', icon: '△' },
+                { key: 'payload_acceptable', label: 'Payload Within Limits', icon: '□' },
+            ];
+
+            const allClear = checkItems.every(item => checks[item.key]);
+
+            return (
+                <div className="spacex-card p-6">
+                    <h3 className="spacex-label mb-4 flex items-center gap-2">
+                        <span className="text-base">◆</span>
+                        Safety Checklist
+                    </h3>
+                    <div className="space-y-0">
+                        {checkItems.map(item => (
+                            <div
+                                key={item.key}
+                                className="spacex-data-row flex items-center gap-3"
+                            >
+                                <span className="text-spacex-white-50 text-sm">{item.icon}</span>
+                                <span className="flex-1 text-sm text-spacex-white-80">
+                                    {item.label}
+                                </span>
+                                <span className={`text-sm font-medium ${checks[item.key] ? 'text-spacex-white' : 'text-spacex-white-40'
+                                    }`}>
+                                    {checks[item.key] ? '✓ PASS' : '✗ FAIL'}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className={`mt-4 py-3 text-center border ${allClear
+                        ? 'border-spacex-white-30 text-spacex-white'
+                        : 'border-spacex-white-15 text-spacex-white-50'
+                        }`}>
+                        <p className="text-sm font-medium uppercase tracking-wider">
+                            {allClear ? '✓ All safety checks passed' : '△ Safety concerns detected'}
+                        </p>
+                    </div>
+                </div>
+            );
+        };
+
+        // Mission Details Card
+        const MissionDetailsCard = ({ mission }) => {
+            if (!mission) return null;
+
+            return (
+                <div className="spacex-card p-6">
+                    <h3 className="spacex-label mb-4 flex items-center gap-2">
+                        <span className="text-base">≡</span>
+                        Mission Details
+                    </h3>
+
+                    <div>
+                        <div className="spacex-data-row flex items-center justify-between">
+                            <span className="spacex-label">Mission ID</span>
+                            <span className="text-spacex-white font-mono text-sm">{mission.mission_id}</span>
+                        </div>
+
+                        <div className="spacex-data-row flex items-center justify-between">
+                            <span className="spacex-label">Priority</span>
+                            <span className="text-spacex-white text-sm font-medium uppercase">
+                                {mission.priority >= 4 ? 'HIGH' :
+                                    mission.priority >= 3 ? 'NORMAL' :
+                                        'LOW'}
+                            </span>
+                        </div>
+
+                        <div className="spacex-data-row">
+                            <div className="flex items-center justify-between">
+                                <span className="spacex-label">◎ Pickup Location</span>
+                            </div>
+                            <div className="text-spacex-white text-sm mt-1">{mission.pickup_location.name || 'Main Kitchen'}</div>
+                            <div className="text-spacex-white-40 text-xs font-mono mt-0.5">
+                                {mission.pickup_location.latitude.toFixed(4)}, {mission.pickup_location.longitude.toFixed(4)}
+                            </div>
+                        </div>
+
+                        <div className="spacex-data-row">
+                            <div className="flex items-center justify-between">
+                                <span className="spacex-label">◎ Delivery Location</span>
+                            </div>
+                            <div className="text-spacex-white text-sm mt-1">{mission.delivery_location.name || 'Student Dorm'}</div>
+                            <div className="text-spacex-white-40 text-xs font-mono mt-0.5">
+                                {mission.delivery_location.latitude.toFixed(4)}, {mission.delivery_location.longitude.toFixed(4)}
+                            </div>
+                        </div>
+
+                        <div className="spacex-data-row flex items-center justify-between">
+                            <span className="spacex-label">Distance</span>
+                            <span className="text-spacex-white text-sm">{mission.distance_meters || '450'}m</span>
+                        </div>
+
+                        <div className="spacex-data-row flex items-center justify-between">
+                            <span className="spacex-label">Est. Flight Time</span>
+                            <span className="text-spacex-white text-sm">{mission.estimated_flight_time || '4'} min</span>
+                        </div>
+
+                        <div className="spacex-data-row flex items-center justify-between">
+                            <span className="spacex-label">Payload</span>
+                            <span className="text-spacex-white text-sm">{mission.payload_weight_grams}g</span>
+                        </div>
+
+                        <div className="spacex-data-row flex items-center justify-between">
+                            <span className="spacex-label">Battery Required</span>
+                            <span className="text-spacex-white text-sm">~{mission.battery_required || '25'}%</span>
+                        </div>
+                    </div>
+
+                    {mission.special_instructions && (
+                        <div className="mt-4 border border-spacex-white-15 p-3">
+                            <div className="spacex-label mb-1">▸ Special Instructions</div>
+                            <div className="text-spacex-white-70 text-sm">{mission.special_instructions}</div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // Drone Status Widget
+        const DroneStatusWidget = ({ drone }) => {
+            return (
+                <div className="spacex-card p-6">
+                    <h3 className="spacex-label mb-4 flex items-center gap-2">
+                        <span className="text-base">▣</span>
+                        Drone Status
+                    </h3>
+
+                    <div>
+                        <div className="spacex-data-row flex items-center justify-between">
+                            <span className="spacex-label">Drone ID</span>
+                            <span className="text-spacex-white font-mono text-sm">{drone.drone_id}</span>
+                        </div>
+
+                        <div className="spacex-data-row flex items-center justify-between">
+                            <span className="spacex-label">Battery</span>
+                            <span className="text-spacex-white text-sm font-medium">
+                                {drone.battery_level}%
+                            </span>
+                        </div>
+
+                        <div className="spacex-data-row flex items-center justify-between">
+                            <span className="spacex-label">GPS Lock</span>
+                            <span className="text-spacex-white text-sm">
+                                ✓ {drone.gps_satellites || 12} satellites
+                            </span>
+                        </div>
+
+                        <div className="spacex-data-row flex items-center justify-between">
+                            <span className="spacex-label">Signal</span>
+                            <span className="text-spacex-white text-sm">
+                                {drone.signal_strength || 'Excellent'}
+                            </span>
+                        </div>
+
+                        <div className="spacex-data-row flex items-center justify-between">
+                            <span className="spacex-label">Status</span>
+                            <span className="px-3 py-1 text-xs font-medium uppercase tracking-wider border border-spacex-white-30 text-spacex-white">
+                                {drone.status}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Mission Queue Item
+        const QueuedMissionItem = ({ mission, index }) => (
+            <div className="spacex-card-subtle p-4">
+                <div className="flex items-center justify-between mb-2">
+                    <span className="spacex-label">#{index + 1} in Queue</span>
+                    <span className="text-spacex-white-40 font-mono text-xs">{mission.mission_id}</span>
+                </div>
+                <div className="text-spacex-white font-medium text-sm mb-1">
+                    {mission.pickup_location.name} → {mission.delivery_location.name}
+                </div>
+                <div className="flex items-center gap-3 text-xs text-spacex-white-50">
+                    <span>{mission.payload_weight_grams}g</span>
+                    <span>·</span>
+                    <span>~{mission.estimated_flight_time}m</span>
+                    <span>·</span>
+                    <span>Priority: {mission.priority}</span>
+                </div>
+            </div>
+        );
+
+        // ============================================================
+        // FLIGHT COMMAND PAGE COMPONENT
+        // ============================================================
+
+        // Campus reference data
+        const CAMPUS_BUILDINGS = [
+            { name: 'Main Kitchen', lat: 5.7596, lng: -0.2234 },
+            { name: 'Engineering Block', lat: 5.7610, lng: -0.2250 },
+            { name: 'Cafeteria', lat: 5.7592, lng: -0.2238 },
+            { name: 'Dorm Block C', lat: 5.7605, lng: -0.2245 },
+            { name: 'Library', lat: 5.7600, lng: -0.2230 },
+            { name: 'Admin Building', lat: 5.7598, lng: -0.2220 },
+        ];
+
+        const GEOFENCE = {
+            minLat: 5.7570, maxLat: 5.7620,
+            minLng: -0.2260, maxLng: -0.2210,
+        };
+
+        const FlightCommandPage = ({ drone, addLog }) => {
+            const canvasRef = useRef(null);
+            const [source, setSource] = useState(null);
+            const [destination, setDestination] = useState(null);
+            const [clickMode, setClickMode] = useState('source'); // 'source' or 'destination'
+            const [altitude, setAltitude] = useState(10);
+            const [speed, setSpeed] = useState(5);
+            const [commandLog, setCommandLog] = useState([]);
+            const [manualSource, setManualSource] = useState({ lat: '', lng: '' });
+            const [manualDest, setManualDest] = useState({ lat: '', lng: '' });
+
+            // Convert GPS to canvas pixel coordinates
+            const gpsToCanvas = (lat, lng, canvas) => {
+                const padding = 60;
+                const w = canvas.width - padding * 2;
+                const h = canvas.height - padding * 2;
+                const x = padding + ((lng - GEOFENCE.minLng) / (GEOFENCE.maxLng - GEOFENCE.minLng)) * w;
+                const y = padding + ((GEOFENCE.maxLat - lat) / (GEOFENCE.maxLat - GEOFENCE.minLat)) * h;
+                return { x, y };
+            };
+
+            // Convert canvas pixel to GPS coordinates
+            const canvasToGps = (px, py, canvas) => {
+                const padding = 60;
+                const w = canvas.width - padding * 2;
+                const h = canvas.height - padding * 2;
+                const lng = GEOFENCE.minLng + ((px - padding) / w) * (GEOFENCE.maxLng - GEOFENCE.minLng);
+                const lat = GEOFENCE.maxLat - ((py - padding) / h) * (GEOFENCE.maxLat - GEOFENCE.minLat);
+                return { lat: Math.round(lat * 10000) / 10000, lng: Math.round(lng * 10000) / 10000 };
+            };
+
+            // Calculate distance between two GPS points (Haversine)
+            const calcDistance = (lat1, lng1, lat2, lng2) => {
+                const R = 6371000;
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLng = (lng2 - lng1) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+                return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+            };
+
+            // Draw the canvas map
+            const drawMap = useCallback(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const dpr = window.devicePixelRatio || 1;
+
+                // Set canvas size to fill container
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                ctx.scale(dpr, dpr);
+
+                // Use CSS dimensions for drawing calculations
+                const drawW = rect.width;
+                const drawH = rect.height;
+                const padding = 60;
+
+                // Background
+                ctx.fillStyle = 'rgba(10, 10, 15, 1)';
+                ctx.fillRect(0, 0, drawW, drawH);
+
+                // Grid lines
+                const gridCountX = 10;
+                const gridCountY = 10;
+                ctx.strokeStyle = 'rgba(240, 240, 250, 0.06)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= gridCountX; i++) {
+                    const x = padding + (i / gridCountX) * (drawW - padding * 2);
+                    ctx.beginPath(); ctx.moveTo(x, padding); ctx.lineTo(x, drawH - padding); ctx.stroke();
+                }
+                for (let i = 0; i <= gridCountY; i++) {
+                    const y = padding + (i / gridCountY) * (drawH - padding * 2);
+                    ctx.beginPath(); ctx.moveTo(padding, y); ctx.lineTo(drawW - padding, y); ctx.stroke();
+                }
+
+                // Axis labels
+                ctx.fillStyle = 'rgba(240, 240, 250, 0.35)';
+                ctx.font = '10px Inter, monospace';
+                ctx.textAlign = 'center';
+                for (let i = 0; i <= 5; i++) {
+                    const lng = GEOFENCE.minLng + (i / 5) * (GEOFENCE.maxLng - GEOFENCE.minLng);
+                    const x = padding + (i / 5) * (drawW - padding * 2);
+                    ctx.fillText(lng.toFixed(4), x, drawH - padding + 20);
+                }
+                ctx.textAlign = 'right';
+                for (let i = 0; i <= 5; i++) {
+                    const lat = GEOFENCE.maxLat - (i / 5) * (GEOFENCE.maxLat - GEOFENCE.minLat);
+                    const y = padding + (i / 5) * (drawH - padding * 2);
+                    ctx.fillText(lat.toFixed(4), padding - 8, y + 4);
+                }
+
+                // Axis titles
+                ctx.fillStyle = 'rgba(240, 240, 250, 0.25)';
+                ctx.font = '9px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('LONGITUDE', drawW / 2, drawH - padding + 40);
+                ctx.save();
+                ctx.translate(15, drawH / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText('LATITUDE', 0, 0);
+                ctx.restore();
+
+                // Geofence boundary
+                const gfTL = gpsToCanvas(GEOFENCE.maxLat, GEOFENCE.minLng, { width: drawW * dpr / dpr, height: drawH * dpr / dpr, getBoundingClientRect: () => rect });
+                const gfBR = gpsToCanvas(GEOFENCE.minLat, GEOFENCE.maxLng, { width: drawW * dpr / dpr, height: drawH * dpr / dpr, getBoundingClientRect: () => rect });
+                // Use manual calculation for geofence
+                const gfX = padding;
+                const gfY = padding;
+                const gfW = drawW - padding * 2;
+                const gfH = drawH - padding * 2;
+                ctx.strokeStyle = 'rgba(240, 240, 250, 0.15)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([6, 4]);
+                ctx.strokeRect(gfX, gfY, gfW, gfH);
+                ctx.setLineDash([]);
+
+                // Geofence label
+                ctx.fillStyle = 'rgba(240, 240, 250, 0.2)';
+                ctx.font = '9px Inter, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText('GEOFENCE BOUNDARY', gfX + 4, gfY - 6);
+
+                // Helper for GPS to canvas using CSS dimensions
+                const toCanvas = (lat, lng) => {
+                    const x = padding + ((lng - GEOFENCE.minLng) / (GEOFENCE.maxLng - GEOFENCE.minLng)) * (drawW - padding * 2);
+                    const y = padding + ((GEOFENCE.maxLat - lat) / (GEOFENCE.maxLat - GEOFENCE.minLat)) * (drawH - padding * 2);
+                    return { x, y };
+                };
+
+                // Draw buildings
+                CAMPUS_BUILDINGS.forEach(b => {
+                    const { x, y } = toCanvas(b.lat, b.lng);
+                    // Building marker
+                    ctx.fillStyle = 'rgba(240, 240, 250, 0.12)';
+                    ctx.fillRect(x - 16, y - 10, 32, 20);
+                    ctx.strokeStyle = 'rgba(240, 240, 250, 0.25)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(x - 16, y - 10, 32, 20);
+                    // Label
+                    ctx.fillStyle = 'rgba(240, 240, 250, 0.5)';
+                    ctx.font = '9px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(b.name.toUpperCase(), x, y - 16);
+                    // Dot
+                    ctx.fillStyle = 'rgba(240, 240, 250, 0.4)';
+                    ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill();
+                });
+
+                // Draw flight path
+                if (source && destination) {
+                    const s = toCanvas(source.lat, source.lng);
+                    const d = toCanvas(destination.lat, destination.lng);
+                    ctx.strokeStyle = 'rgba(240, 240, 250, 0.4)';
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([8, 6]);
+                    ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(d.x, d.y); ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // Distance label at midpoint
+                    const mx = (s.x + d.x) / 2;
+                    const my = (s.y + d.y) / 2;
+                    const dist = calcDistance(source.lat, source.lng, destination.lat, destination.lng);
+                    ctx.fillStyle = 'rgba(10, 10, 15, 0.85)';
+                    ctx.fillRect(mx - 30, my - 10, 60, 18);
+                    ctx.fillStyle = 'rgba(240, 240, 250, 0.7)';
+                    ctx.font = '10px Inter, monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`${dist}m`, mx, my + 3);
+                }
+
+                // Draw source marker
+                if (source) {
+                    const { x, y } = toCanvas(source.lat, source.lng);
+                    // Outer ring
+                    ctx.strokeStyle = 'rgba(240, 240, 250, 0.9)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.stroke();
+                    // Inner dot
+                    ctx.fillStyle = 'rgba(240, 240, 250, 0.9)';
+                    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+                    // Label
+                    ctx.fillStyle = 'rgba(240, 240, 250, 0.8)';
+                    ctx.font = 'bold 10px Inter, sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.fillText('SOURCE', x + 15, y - 2);
+                    ctx.font = '9px Inter, monospace';
+                    ctx.fillStyle = 'rgba(240, 240, 250, 0.5)';
+                    ctx.fillText(`${source.lat}, ${source.lng}`, x + 15, y + 11);
+                }
+
+                // Draw destination marker
+                if (destination) {
+                    const { x, y } = toCanvas(destination.lat, destination.lng);
+                    // Diamond shape
+                    ctx.fillStyle = 'rgba(240, 240, 250, 0.9)';
+                    ctx.beginPath();
+                    ctx.moveTo(x, y - 10); ctx.lineTo(x + 8, y); ctx.lineTo(x, y + 10); ctx.lineTo(x - 8, y);
+                    ctx.closePath(); ctx.fill();
+                    // Inner cutout
+                    ctx.fillStyle = 'rgba(10, 10, 15, 1)';
+                    ctx.beginPath();
+                    ctx.moveTo(x, y - 5); ctx.lineTo(x + 4, y); ctx.lineTo(x, y + 5); ctx.lineTo(x - 4, y);
+                    ctx.closePath(); ctx.fill();
+                    // Label
+                    ctx.fillStyle = 'rgba(240, 240, 250, 0.8)';
+                    ctx.font = 'bold 10px Inter, sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.fillText('DESTINATION', x + 15, y - 2);
+                    ctx.font = '9px Inter, monospace';
+                    ctx.fillStyle = 'rgba(240, 240, 250, 0.5)';
+                    ctx.fillText(`${destination.lat}, ${destination.lng}`, x + 15, y + 11);
+                }
+
+                // Click mode indicator
+                ctx.fillStyle = 'rgba(240, 240, 250, 0.3)';
+                ctx.font = '10px Inter, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(`CLICK TO SET: ${clickMode.toUpperCase()}`, drawW - padding, padding - 8);
+
+            }, [source, destination, clickMode]);
+
+            // Redraw on state change and resize
+            // Redraw on state change and resize
+            useEffect(() => {
+                drawMap();
+
+                // Force redraw after a short delay to ensure canvas has correct dimensions from CSS
+                // This fixes the initial "crowded" render if the browser hasn't finished layout
+                const timer = setTimeout(drawMap, 50);
+
+                const handleResize = () => drawMap();
+                window.addEventListener('resize', handleResize);
+                return () => {
+                    window.removeEventListener('resize', handleResize);
+                    clearTimeout(timer);
+                };
+            }, [drawMap]);
+
+            // Handle map click
+            const handleCanvasClick = (e) => {
+                const canvas = canvasRef.current;
+                const rect = canvas.getBoundingClientRect();
+                const px = e.clientX - rect.left;
+                const py = e.clientY - rect.top;
+                const padding = 60;
+                const drawW = rect.width;
+                const drawH = rect.height;
+
+                // Only register clicks inside the geofence area
+                if (px < padding || px > drawW - padding || py < padding || py > drawH - padding) return;
+
+                const lng = GEOFENCE.minLng + ((px - padding) / (drawW - padding * 2)) * (GEOFENCE.maxLng - GEOFENCE.minLng);
+                const lat = GEOFENCE.maxLat - ((py - padding) / (drawH - padding * 2)) * (GEOFENCE.maxLat - GEOFENCE.minLat);
+                const coords = { lat: Math.round(lat * 10000) / 10000, lng: Math.round(lng * 10000) / 10000 };
+
+                if (clickMode === 'source') {
+                    setSource(coords);
+                    setManualSource({ lat: coords.lat.toString(), lng: coords.lng.toString() });
+                    setClickMode('destination');
+                } else {
+                    setDestination(coords);
+                    setManualDest({ lat: coords.lat.toString(), lng: coords.lng.toString() });
+                    setClickMode('source');
+                }
+            };
+
+            // Handle manual coordinate input
+            const applyManualCoords = (type) => {
+                const manual = type === 'source' ? manualSource : manualDest;
+                const lat = parseFloat(manual.lat);
+                const lng = parseFloat(manual.lng);
+                if (isNaN(lat) || isNaN(lng)) return;
+                const coords = { lat: Math.round(lat * 10000) / 10000, lng: Math.round(lng * 10000) / 10000 };
+                if (type === 'source') setSource(coords);
+                else setDestination(coords);
+            };
+
+            // Quick-pick building
+            const quickPick = (building, type) => {
+                const coords = { lat: building.lat, lng: building.lng };
+                if (type === 'source') {
+                    setSource(coords);
+                    setManualSource({ lat: coords.lat.toString(), lng: coords.lng.toString() });
+                } else {
+                    setDestination(coords);
+                    setManualDest({ lat: coords.lat.toString(), lng: coords.lng.toString() });
+                }
+            };
+
+            // Send flight command
+            const sendCommand = () => {
+                if (!source || !destination) return;
+                const dist = calcDistance(source.lat, source.lng, destination.lat, destination.lng);
+                const cmd = {
+                    id: `CMD-${Date.now()}`,
+                    timestamp: new Date().toLocaleTimeString(),
+                    source,
+                    destination,
+                    altitude,
+                    speed,
+                    distance: dist,
+                };
+                setCommandLog(prev => [cmd, ...prev.slice(0, 19)]);
+                if (addLog) addLog(`Flight command sent: ${source.lat},${source.lng} → ${destination.lat},${destination.lng} | Alt: ${altitude}m | Spd: ${speed}m/s | Dist: ${dist}m`, 'success');
+            };
+
+            // Clear all
+            const clearAll = () => {
+                setSource(null);
+                setDestination(null);
+                setManualSource({ lat: '', lng: '' });
+                setManualDest({ lat: '', lng: '' });
+                setClickMode('source');
+            };
+
+            const distance = source && destination ? calcDistance(source.lat, source.lng, destination.lat, destination.lng) : null;
+
+            return (
+                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Map Panel */}
+                    <div className="lg:col-span-2 space-y-4">
+                        <div className="spacex-card p-0 overflow-hidden" style={{ height: '520px' }}>
+                            <canvas
+                                ref={canvasRef}
+                                onClick={handleCanvasClick}
+                                className="w-full h-full cursor-crosshair"
+                                style={{ display: 'block' }}
+                            />
+                        </div>
+
+                        {/* Map Legend */}
+                        <div className="spacex-card p-4 flex items-center gap-8 text-xs">
+                            <div className="flex items-center gap-2">
+                                <span className="inline-block w-4 h-4 border-2 border-spacex-white-90 rounded-full"></span>
+                                <span className="text-spacex-white-60">SOURCE</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-spacex-white-90 text-sm">◆</span>
+                                <span className="text-spacex-white-60">DESTINATION</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="inline-block w-6 border-t border-dashed border-spacex-white-50"></span>
+                                <span className="text-spacex-white-60">FLIGHT PATH</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="inline-block w-4 h-3 border border-spacex-white-30 bg-spacex-white-10"></span>
+                                <span className="text-spacex-white-60">BUILDING</span>
+                            </div>
+                            <div className="flex-1"></div>
+                            <span className="text-spacex-white-30">CLICK MAP TO PLACE: {clickMode.toUpperCase()}</span>
+                        </div>
+                    </div>
+
+                    {/* Command Panel */}
+                    <div className="space-y-4">
+                        {/* Source Coordinates */}
+                        <div className="spacex-card p-5">
+                            <h3 className="spacex-label text-spacex-white-70 mb-4 flex items-center gap-2">
+                                <span className="text-base">◎</span> Source Coordinates
+                            </h3>
+                            <div className="space-y-3">
+                                <div className="flex gap-2">
+                                    <div className="flex-1">
+                                        <label className="text-spacex-white-30 text-xs uppercase tracking-wider block mb-1">Latitude</label>
+                                        <input
+                                            type="text"
+                                            value={manualSource.lat}
+                                            onChange={e => setManualSource(prev => ({ ...prev, lat: e.target.value }))}
+                                            onBlur={() => applyManualCoords('source')}
+                                            placeholder="5.7596"
+                                            className="w-full bg-spacex-white-10 border border-spacex-white-15 text-spacex-white p-2 text-sm font-mono focus:outline-none focus:border-spacex-white-30"
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <label className="text-spacex-white-30 text-xs uppercase tracking-wider block mb-1">Longitude</label>
+                                        <input
+                                            type="text"
+                                            value={manualSource.lng}
+                                            onChange={e => setManualSource(prev => ({ ...prev, lng: e.target.value }))}
+                                            onBlur={() => applyManualCoords('source')}
+                                            placeholder="-0.2234"
+                                            className="w-full bg-spacex-white-10 border border-spacex-white-15 text-spacex-white p-2 text-sm font-mono focus:outline-none focus:border-spacex-white-30"
+                                        />
+                                    </div>
+                                </div>
+                                <select
+                                    onChange={e => { const b = CAMPUS_BUILDINGS.find(b => b.name === e.target.value); if (b) quickPick(b, 'source'); }}
+                                    value=""
+                                    className="w-full bg-spacex-white-10 border border-spacex-white-15 text-spacex-white-60 p-2 text-xs uppercase tracking-wider focus:outline-none cursor-pointer"
+                                >
+                                    <option value="">Quick Pick Building...</option>
+                                    {CAMPUS_BUILDINGS.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Destination Coordinates */}
+                        <div className="spacex-card p-5">
+                            <h3 className="spacex-label text-spacex-white-70 mb-4 flex items-center gap-2">
+                                <span className="text-base">◆</span> Destination Coordinates
+                            </h3>
+                            <div className="space-y-3">
+                                <div className="flex gap-2">
+                                    <div className="flex-1">
+                                        <label className="text-spacex-white-30 text-xs uppercase tracking-wider block mb-1">Latitude</label>
+                                        <input
+                                            type="text"
+                                            value={manualDest.lat}
+                                            onChange={e => setManualDest(prev => ({ ...prev, lat: e.target.value }))}
+                                            onBlur={() => applyManualCoords('destination')}
+                                            placeholder="5.7610"
+                                            className="w-full bg-spacex-white-10 border border-spacex-white-15 text-spacex-white p-2 text-sm font-mono focus:outline-none focus:border-spacex-white-30"
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <label className="text-spacex-white-30 text-xs uppercase tracking-wider block mb-1">Longitude</label>
+                                        <input
+                                            type="text"
+                                            value={manualDest.lng}
+                                            onChange={e => setManualDest(prev => ({ ...prev, lng: e.target.value }))}
+                                            onBlur={() => applyManualCoords('destination')}
+                                            placeholder="-0.2250"
+                                            className="w-full bg-spacex-white-10 border border-spacex-white-15 text-spacex-white p-2 text-sm font-mono focus:outline-none focus:border-spacex-white-30"
+                                        />
+                                    </div>
+                                </div>
+                                <select
+                                    onChange={e => { const b = CAMPUS_BUILDINGS.find(b => b.name === e.target.value); if (b) quickPick(b, 'destination'); }}
+                                    value=""
+                                    className="w-full bg-spacex-white-10 border border-spacex-white-15 text-spacex-white-60 p-2 text-xs uppercase tracking-wider focus:outline-none cursor-pointer"
+                                >
+                                    <option value="">Quick Pick Building...</option>
+                                    {CAMPUS_BUILDINGS.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Flight Parameters */}
+                        <div className="spacex-card p-5">
+                            <h3 className="spacex-label text-spacex-white-70 mb-4 flex items-center gap-2">
+                                <span className="text-base">▥</span> Flight Parameters
+                            </h3>
+                            <div className="space-y-3">
+                                <div className="spacex-data-row">
+                                    <span className="text-spacex-white-50 text-sm">Altitude</span>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            value={altitude}
+                                            onChange={e => setAltitude(parseInt(e.target.value) || 0)}
+                                            min="2" max="120"
+                                            className="w-20 bg-spacex-white-10 border border-spacex-white-15 text-spacex-white p-1.5 text-sm font-mono text-right focus:outline-none focus:border-spacex-white-30"
+                                        />
+                                        <span className="text-spacex-white-50 text-xs">m</span>
+                                    </div>
+                                </div>
+                                <div className="spacex-data-row">
+                                    <span className="text-spacex-white-50 text-sm">Speed</span>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            value={speed}
+                                            onChange={e => setSpeed(parseInt(e.target.value) || 0)}
+                                            min="1" max="15"
+                                            className="w-20 bg-spacex-white-10 border border-spacex-white-15 text-spacex-white p-1.5 text-sm font-mono text-right focus:outline-none focus:border-spacex-white-30"
+                                        />
+                                        <span className="text-spacex-white-50 text-xs">m/s</span>
+                                    </div>
+                                </div>
+                                {distance !== null && (
+                                    <div className="spacex-data-row">
+                                        <span className="text-spacex-white-50 text-sm">Distance</span>
+                                        <span className="text-spacex-white font-mono text-sm">{distance}m</span>
+                                    </div>
+                                )}
+                                {distance !== null && (
+                                    <div className="spacex-data-row">
+                                        <span className="text-spacex-white-50 text-sm">Est. Flight Time</span>
+                                        <span className="text-spacex-white font-mono text-sm">{Math.ceil(distance / speed)}s</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3">
+                            <button
+                                onClick={sendCommand}
+                                disabled={!source || !destination}
+                                className={`flex-1 py-3 font-medium text-sm uppercase tracking-wider transition-all ${source && destination
+                                    ? 'bg-spacex-white text-black hover:bg-spacex-white-90'
+                                    : 'bg-spacex-white-10 text-spacex-white-30 cursor-not-allowed'
+                                    }`}
+                            >
+                                ▸ Send Flight Command
+                            </button>
+                            <button
+                                onClick={clearAll}
+                                className="px-5 py-3 border border-spacex-white-15 text-spacex-white-60 hover:text-spacex-white hover:border-spacex-white-30 font-medium text-sm uppercase tracking-wider transition-all"
+                            >
+                                Clear
+                            </button>
+                        </div>
+
+                        {/* Command Log */}
+                        <div className="spacex-card p-5">
+                            <h3 className="spacex-label text-spacex-white-70 mb-3 flex items-center gap-2">
+                                <span className="text-base">≡</span> Command Log
+                            </h3>
+                            <div className="space-y-2 max-h-48 overflow-y-auto scrollable">
+                                {commandLog.length === 0 ? (
+                                    <p className="text-spacex-white-30 text-xs text-center py-4">No commands sent yet</p>
+                                ) : (
+                                    commandLog.map((cmd, i) => (
+                                        <div key={cmd.id} className="spacex-card-subtle p-3 text-xs space-y-1">
+                                            <div className="flex justify-between">
+                                                <span className="text-spacex-white-50 font-mono">{cmd.id}</span>
+                                                <span className="text-spacex-white-30">{cmd.timestamp}</span>
+                                            </div>
+                                            <div className="text-spacex-white-70 font-mono">
+                                                {cmd.source.lat}, {cmd.source.lng} → {cmd.destination.lat}, {cmd.destination.lng}
+                                            </div>
+                                            <div className="text-spacex-white-30">
+                                                Alt: {cmd.altitude}m · Spd: {cmd.speed}m/s · Dist: {cmd.distance}m
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ============================================================
+        // MAIN APP COMPONENT
+        // ============================================================
+        const GroundStationOperatorUI = () => {
+            // State
+            const [activePage, setActivePage] = useState('missions');
+            const [pendingMission, setPendingMission] = useState(null);
+            const [currentMission, setCurrentMission] = useState(null);
+            const [missionQueue, setMissionQueue] = useState([]);
+            const [stats, setStats] = useState({ completed: 12, queued: 3, rejected: 1, avgTime: 2.3 });
+            const [drone, setDrone] = useState({
+                drone_id: 'D-ANAFI-001',
+                battery_level: 85,
+                gps_satellites: 14,
+                signal_strength: 'Excellent',
+                status: 'AVAILABLE'
+            });
+            const [logs, setLogs] = useState([]);
+            const [operatorName, setOperatorName] = useState('Operator');
+
+            // Audio notification
+            const playNotification = () => {
+                // Simple beep sound (you can replace with actual audio file)
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                gainNode.gain.value = 0.3;
+
+                oscillator.start();
+                setTimeout(() => oscillator.stop(), 200);
+            };
+
+            // Add log
+            const addLog = (message, type = 'info') => {
+                const timestamp = new Date().toLocaleTimeString();
+                setLogs(prev => [...prev.slice(-49), { timestamp, message, type }]);
+            };
+
+            // Simulate new mission request
+            const simulateNewMission = () => {
+                const missions = [
+                    {
+                        mission_id: `M-${Date.now()}`,
+                        priority: Math.floor(Math.random() * 5) + 1,
+                        pickup_location: { name: 'Main Kitchen', latitude: 5.7596, longitude: -0.2234 },
+                        delivery_location: { name: 'Engineering Block', latitude: 5.7610, longitude: -0.2250 },
+                        payload_weight_grams: 380,
+                        distance_meters: 450,
+                        estimated_flight_time: 4,
+                        battery_required: 25,
+                        special_instructions: null,
+                        safety_checklist: {
+                            battery_sufficient: drone.battery_level >= 30,
+                            within_geofence: true,
+                            weather_acceptable: true,
+                            no_airspace_conflicts: true,
+                            payload_acceptable: true
+                        }
+                    },
+                    {
+                        mission_id: `M-${Date.now()}`,
+                        priority: 5,
+                        pickup_location: { name: 'Cafeteria', latitude: 5.7592, longitude: -0.2238 },
+                        delivery_location: { name: 'Dorm Block C', latitude: 5.7605, longitude: -0.2245 },
+                        payload_weight_grams: 450,
+                        distance_meters: 380,
+                        estimated_flight_time: 3,
+                        battery_required: 20,
+                        special_instructions: 'Fragile items - handle with care',
+                        safety_checklist: {
+                            battery_sufficient: drone.battery_level >= 30,
+                            within_geofence: true,
+                            weather_acceptable: true,
+                            no_airspace_conflicts: true,
+                            payload_acceptable: true
+                        }
+                    }
+                ];
+
+                const newMission = missions[Math.floor(Math.random() * missions.length)];
+                setPendingMission(newMission);
+                playNotification();
+                addLog(`New mission request received: ${newMission.mission_id}`, 'info');
+            };
+
+            // Handle approve
+            const handleApprove = () => {
+                addLog(`Mission ${pendingMission.mission_id} APPROVED by ${operatorName}`, 'success');
+                setMissionQueue(prev => [...prev, pendingMission]);
+                setPendingMission(null);
+
+                // If no current mission, start immediately
+                if (!currentMission) {
+                    setTimeout(() => {
+                        setMissionQueue(prev => {
+                            const [next, ...rest] = prev;
+                            if (next) {
+                                setCurrentMission(next);
+                                setDrone(d => ({ ...d, status: 'IN_MISSION' }));
+                                addLog(`Starting mission ${next.mission_id}`, 'success');
+                            }
+                            return rest;
+                        });
+                    }, 1000);
+                }
+            };
+
+            // Handle reject
+            const handleReject = () => {
+                addLog(`Mission ${pendingMission.mission_id} REJECTED by ${operatorName}`, 'warning');
+                setPendingMission(null);
+            };
+
+            // Simulate mission completion
+            useEffect(() => {
+                if (currentMission) {
+                    const timer = setTimeout(() => {
+                        addLog(`Mission ${currentMission.mission_id} COMPLETED`, 'success');
+                        setCurrentMission(null);
+                        setDrone(d => ({ ...d, status: 'AVAILABLE', battery_level: d.battery_level - 15 }));
+
+                        // Start next mission if queued
+                        setMissionQueue(prev => {
+                            const [next, ...rest] = prev;
+                            if (next) {
+                                setTimeout(() => {
+                                    setCurrentMission(next);
+                                    setDrone(d => ({ ...d, status: 'IN_MISSION' }));
+                                    addLog(`Starting mission ${next.mission_id}`, 'success');
+                                }, 2000);
+                            }
+                            return rest;
+                        });
+                    }, 15000); // 15 seconds for demo
+
+                    return () => clearTimeout(timer);
+                }
+            }, [currentMission]);
+
+            return (
+                <div className="min-h-screen bg-black p-8 md:p-12">
+                    {/* Header */}
+                    <header className="max-w-7xl mx-auto mb-8">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-2xl md:text-3xl font-light text-spacex-white flex items-center gap-4 tracking-wide">
+                                    <span>
+                                        <span className="font-semibold">Eco</span>Drone
+                                    </span>
+                                    <span className="text-xs font-light bg-spacex-white-10 text-spacex-white-60 px-4 py-1.5 border border-spacex-white-15 uppercase tracking-widest">
+                                        Ground Station Operator
+                                    </span>
+                                </h1>
+                                <p className="text-spacex-white-50 mt-2 text-sm">
+                                    Station ID: {GROUND_STATION_ID} • Operator: {operatorName}
+                                </p>
+                            </div>
+
+                            {activePage === 'missions' && (
+                                <button
+                                    onClick={simulateNewMission}
+                                    className="px-6 py-3 bg-spacex-white text-black hover:bg-spacex-white-90 font-medium text-sm uppercase tracking-wider transition-all"
+                                >
+                                    ◎ Simulate Mission Request
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Tab Navigation */}
+                        <nav className="mt-6 flex gap-0 border-b border-spacex-white-10">
+                            <button
+                                onClick={() => setActivePage('missions')}
+                                className={`px-6 py-3 text-xs font-medium uppercase tracking-widest transition-all border-b-2 -mb-px ${activePage === 'missions'
+                                    ? 'border-spacex-white text-spacex-white'
+                                    : 'border-transparent text-spacex-white-30 hover:text-spacex-white-60'
+                                    }`}
+                            >
+                                ▣ Missions
+                            </button>
+                            <button
+                                onClick={() => setActivePage('flight')}
+                                className={`px-6 py-3 text-xs font-medium uppercase tracking-widest transition-all border-b-2 -mb-px ${activePage === 'flight'
+                                    ? 'border-spacex-white text-spacex-white'
+                                    : 'border-transparent text-spacex-white-30 hover:text-spacex-white-60'
+                                    }`}
+                            >
+                                △ Flight Command
+                            </button>
+                        </nav>
+                    </header>
+
+                    {activePage === 'flight' && (
+                        <FlightCommandPage drone={drone} addLog={addLog} />
+                    )}
+
+                    {activePage === 'missions' && <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Left Column - Mission Approval */}
+                        <div className="lg:col-span-2 space-y-6">
+                            {/* Pending Approval */}
+                            {pendingMission && (
+                                <div className="mission-notification border border-spacex-white-30 p-6">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="relative">
+                                            <span className="text-3xl text-spacex-white pulse-ring">△</span>
+                                        </div>
+                                        <div>
+                                            <h2 className="text-xl font-light text-spacex-white uppercase tracking-wider">Mission Approval Required</h2>
+                                            <p className="text-spacex-white-50 text-sm mt-1">Review safety information and approve or reject</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid md:grid-cols-2 gap-4 mb-6">
+                                        <MissionDetailsCard mission={pendingMission} />
+                                        <SafetyChecklist mission={pendingMission} />
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <button
+                                            onClick={handleApprove}
+                                            className="spacex-btn-primary flex-1 py-4 px-6 text-sm"
+                                        >
+                                            ✓ Approve Mission
+                                        </button>
+                                        <button
+                                            onClick={handleReject}
+                                            className="spacex-btn-outline flex-1 py-4 px-6 text-sm"
+                                        >
+                                            ✗ Reject Mission
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Current Mission */}
+                            {currentMission && (
+                                <div className="border border-spacex-white-30 p-6">
+                                    <h2 className="spacex-label text-sm mb-4 flex items-center gap-2">
+                                        <span className="animate-pulse text-spacex-white">✦</span>
+                                        Mission In Progress
+                                    </h2>
+                                    <MissionDetailsCard mission={currentMission} />
+
+                                    <div className="mt-4 spacex-card p-4">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="spacex-label">Progress</span>
+                                            <span className="text-spacex-white text-sm font-mono">Executing...</span>
+                                        </div>
+                                        <div className="w-full bg-spacex-white-10 h-0.5">
+                                            <div className="bg-spacex-white h-0.5 animate-pulse" style={{ width: '60%' }}></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Empty State */}
+                            {!pendingMission && !currentMission && missionQueue.length === 0 && (
+                                <div className="spacex-card p-12 text-center">
+                                    <div className="text-5xl mb-4 text-spacex-white-30">△</div>
+                                    <h3 className="text-lg font-light text-spacex-white uppercase tracking-wider mb-2">No Active Missions</h3>
+                                    <p className="text-spacex-white-50 text-sm">
+                                        Waiting for mission requests from delivery app...
+                                    </p>
+                                    <p className="text-spacex-white-30 text-xs mt-4 uppercase tracking-wider">
+                                        Click "Simulate Mission Request" to test the approval flow
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Activity Log */}
+                            <div className="spacex-card p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="spacex-label flex items-center gap-2">
+                                        <span className="text-base">≡</span>
+                                        Activity Log
+                                    </h2>
+                                    <button
+                                        onClick={() => setLogs([])}
+                                        className="spacex-btn-outline text-xs px-3 py-1"
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+                                <div className="bg-black border border-spacex-white-10 p-4 h-64 overflow-y-auto scrollable font-mono text-xs">
+                                    {logs.length === 0 ? (
+                                        <div className="text-spacex-white-30 text-center py-8">
+                                            No activity yet
+                                        </div>
+                                    ) : (
+                                        logs.map((log, i) => (
+                                            <div
+                                                key={i}
+                                                className={`mb-1.5 flex items-start gap-2 ${log.type === 'error' ? 'text-red-400' :
+                                                    log.type === 'success' ? 'text-green-400' :
+                                                        log.type === 'warning' ? 'text-spacex-white-60' :
+                                                            'text-spacex-white-40'
+                                                    }`}
+                                            >
+                                                <span className="text-spacex-white-30 shrink-0">[{log.timestamp}]</span>
+                                                <span className="shrink-0">▸</span>
+                                                <span>{log.message}</span>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Column - Status & Queue */}
+                        <div className="space-y-6">
+                            {/* Drone Status */}
+                            <DroneStatusWidget drone={drone} />
+
+                            {/* Mission Queue */}
+                            <div className="spacex-card p-6">
+                                <h2 className="spacex-label mb-4 flex items-center gap-2">
+                                    <span className="text-base">▦</span>
+                                    Mission Queue
+                                    <span className="text-xs bg-spacex-white-10 px-2 py-0.5 border border-spacex-white-15">
+                                        {missionQueue.length}
+                                    </span>
+                                </h2>
+
+                                {missionQueue.length === 0 ? (
+                                    <div className="text-spacex-white-30 text-center py-8 text-sm">
+                                        No missions queued
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {missionQueue.map((mission, index) => (
+                                            <QueuedMissionItem
+                                                key={mission.mission_id}
+                                                mission={mission}
+                                                index={index}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Statistics */}
+                            <div className="spacex-card p-6">
+                                <h2 className="spacex-label mb-4 flex items-center gap-2">
+                                    <span className="text-base">▥</span>
+                                    Today's Stats
+                                </h2>
+                                <div className="grid grid-cols-2 gap-px bg-spacex-white-10">
+                                    <div className="bg-black p-4 text-center">
+                                        <div className="text-2xl font-light text-spacex-white">12</div>
+                                        <div className="spacex-label mt-1">Completed</div>
+                                    </div>
+                                    <div className="bg-black p-4 text-center">
+                                        <div className="text-2xl font-light text-spacex-white">3</div>
+                                        <div className="spacex-label mt-1">In Queue</div>
+                                    </div>
+                                    <div className="bg-black p-4 text-center">
+                                        <div className="text-2xl font-light text-spacex-white">1</div>
+                                        <div className="spacex-label mt-1">Rejected</div>
+                                    </div>
+                                    <div className="bg-black p-4 text-center">
+                                        <div className="text-2xl font-light text-spacex-white">2.3</div>
+                                        <div className="spacex-label mt-1">Avg Time (min)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </main>}
+
+                    {/* Footer */}
+                    <footer className="max-w-7xl mx-auto mt-12 pt-8 border-t border-spacex-white-10 text-center">
+                        <p className="text-spacex-white-30 text-xs uppercase tracking-widest">
+                            © 2026 Soft Touch. All Rights Reserved.
+                        </p>
+                    </footer>
+                </div>
+            );
+        };
+
+        // Render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<GroundStationOperatorUI />);
+    </script>
+</body>
+
+</html>

@@ -24,6 +24,15 @@ All three user stories for Epic 1 "Drone on a Leash" have been successfully impl
 - Battery history and statistics tracking
 - Location: `src/monitoring/battery_monitor.py`
 
+## ✅ Operator Interface (Sprint 0 → SpaceX Redesign)
+- Web-based mission control UI (`operator-interface.html`)
+- **SpaceX-inspired design** — monochrome palette, sharp corners, all-caps labels
+- Mission approval workflow with safety checklist review
+- Drone telemetry display (battery, GPS, signal, status)
+- Activity log with color-coded success/error entries
+- Mission queue management and statistics dashboard
+- Built with React 18 + Tailwind CSS (CDN, no build step)
+
 ## Usage
 
 ### Run Demo:
@@ -55,6 +64,7 @@ EcoDrone/
 │   └── logs/
 │       └── battery_logs.json  # Battery history
 ├── demo_epic1.py              # Demonstration script
+├── operator-interface.html    # Web-based operator UI
 └── docs/
     ├── system_architecture.md # Updated architecture
     └── ARCHITECTURE_CLARIFICATIONS.md

@@ -278,7 +278,49 @@ This specification is intended to be sufficiently detailed to guide:
 
 ---
 
-## 11. Final One-Line Summary
+## 11. Repository Structure Mapping
+
+The following table maps architectural components to their repository locations:
+
+| Architectural Component | Repository Location | Deployment Target |
+|------------------------|---------------------|-------------------|
+| **PWA (Frontend)** | `delivery-app/frontend/` | Cloud (Google Cloud Run) |
+| **Backend (Mission Control)** | `delivery-app/backend/` | Cloud (Google Cloud Run) |
+| **Ground Station (Drone Control)** | `ground-station/` | On-premises (Ubuntu laptop) |
+| **Drone (Air SDK)** | _(Hardware - not in repo)_ | ANAFI Ai drone |
+| **Shared Contracts** | `shared/` | Imported by both delivery-app & ground-station |
+
+### Directory Structure
+
+```
+EcoDrone/
+├── delivery-app/          # Cloud-hosted business layer
+│   ├── backend/           # FastAPI + PostgreSQL + Redis
+│   └── frontend/          # React PWA
+├── ground-station/        # On-premises drone control
+│   ├── controllers/       # Olympe SDK interfacing
+│   ├── api/               # Ground station HTTP API
+│   ├── data/              # Local drone registry
+│   └── scripts/           # Development scripts
+├── shared/                # API contracts & constants
+│   ├── api_contracts/     # Pydantic models
+│   └── constants/         # Shared limits & states
+└── docs/                  # System documentation
+```
+
+### Communication Flow in Repository
+
+```
+delivery-app/backend/  ←→  ground-station/api/  ←→  [Drone Hardware]
+        ↓                         ↓
+    shared/api_contracts/   shared/api_contracts/
+```
+
+Both `delivery-app` and `ground-station` import from `shared/` to ensure type-safe communication.
+
+---
+
+## 12. Final One-Line Summary
 
 > [!NOTE]
 > **Design Philosophy**
