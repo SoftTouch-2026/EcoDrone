@@ -1,0 +1,1 @@
+export const DRONE_BATTERY_THRESHOLD = 20

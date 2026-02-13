@@ -1,0 +1,57 @@
+# Dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist
+build
+*.tsbuildinfo
+
+# Development files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Testing
+coverage
+.nyc_output
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Prisma - exclude compiled config files but keep the TypeScript source
+prisma/migrations/**/migration.sql
+prisma.config.js
+prisma.config.d.ts
+prisma.config.*.map
+
+# Documentation
+*.md
+!README.md
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose*.yml
+
+# Misc
+.prettierrc
+.eslintrc
