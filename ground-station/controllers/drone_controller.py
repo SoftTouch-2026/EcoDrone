@@ -25,8 +25,8 @@ logger = logging.getLogger("EcoDrone")
 # Try to import Olympe - if not available, use simulation mode
 try:
     import olympe
-    from olympe.messages.ardrone3.Piloting import TakeOff, Landing, moveBy
-    from olympe.messages.ardrone3.PilotingState import FlyingStateChanged
+    from olympe.messages.ardrone3.Piloting import TakeOff, Landing, moveBy, moveTo
+    from olympe.messages.ardrone3.PilotingState import FlyingStateChanged, PositionChanged
     from olympe.messages.common.CommonState import BatteryStateChanged
     from olympe.messages.ardrone3.PilotingState import AltitudeChanged
     OLYMPE_AVAILABLE = True
@@ -181,6 +181,53 @@ class DroneSimulator:
             self.status.altitude = 0
             self.status.state = DroneState.LANDED
             self.status.message = "Landed safely"
+    
+    def fly_to_coordinates(self, latitude: float, longitude: float, altitude: float = 10) -> dict:
+        """Simulate flying to GPS coordinates"""
+        with self._lock:
+            if not self.status.connected:
+                return {"success": False, "message": "Drone not connected"}
+            if self.status.state not in [DroneState.HOVERING, DroneState.FLYING]:
+                return {"success": False, "message": f"Drone must be in flight. Current state: {self.status.state.value}"}
+            
+            self.status.state = DroneState.FLYING
+            self.status.latitude = latitude
+            self.status.longitude = longitude
+            self.status.altitude = altitude
+            self.status.message = f"Navigating to {latitude}, {longitude} at {altitude}m"
+            self.status.battery_level = max(0, self.status.battery_level - 2.0)
+        
+        # Simulate flight time
+        def _simulate_nav():
+            time.sleep(2)
+            with self._lock:
+                self.status.state = DroneState.HOVERING
+                self.status.message = f"Arrived at {latitude}, {longitude}"
+        
+        threading.Thread(target=_simulate_nav).start()
+        return {"success": True, "message": f"Navigating to lat={latitude}, lng={longitude}, alt={altitude}m"}
+    
+    def move_by(self, forward: float, right: float, up: float, rotation: float = 0) -> dict:
+        """Simulate relative movement"""
+        with self._lock:
+            if not self.status.connected:
+                return {"success": False, "message": "Drone not connected"}
+            if self.status.state not in [DroneState.HOVERING, DroneState.FLYING]:
+                return {"success": False, "message": f"Drone must be in flight. Current state: {self.status.state.value}"}
+            
+            self.status.state = DroneState.FLYING
+            self.status.altitude = max(0, self.status.altitude + up)
+            self.status.message = f"Moving: fwd={forward}m, right={right}m, up={up}m"
+            self.status.battery_level = max(0, self.status.battery_level - 1.0)
+        
+        def _simulate_move():
+            time.sleep(1)
+            with self._lock:
+                self.status.state = DroneState.HOVERING
+                self.status.message = f"Move complete"
+        
+        threading.Thread(target=_simulate_move).start()
+        return {"success": True, "message": f"Moving fwd={forward}m, right={right}m, up={up}m, rot={rotation}°"}
     
     def get_status(self) -> dict:
         with self._lock:
@@ -412,6 +459,85 @@ class ParrotANAFIController:
                 logger.error(f"Status update error: {e}")
             
             time.sleep(0.5)  # Update every 500ms
+    
+    def fly_to_coordinates(self, latitude: float, longitude: float, altitude: float = 10) -> dict:
+        """Command the drone to fly to GPS coordinates using Olympe moveTo"""
+        if not self.drone or not self.status.connected:
+            return {"success": False, "message": "Drone not connected"}
+        
+        if self.status.state not in [DroneState.HOVERING, DroneState.FLYING]:
+            return {"success": False, "message": f"Drone must be in flight. Current state: {self.status.state.value}"}
+        
+        try:
+            with self._lock:
+                self.status.state = DroneState.FLYING
+                self.status.message = f"Navigating to {latitude}, {longitude}..."
+            
+            result = self.drone(
+                moveTo(latitude, longitude, altitude, 0)
+                >> PositionChanged(_timeout=60)
+            ).wait()
+            
+            if result.success():
+                with self._lock:
+                    self.status.state = DroneState.HOVERING
+                    self.status.latitude = latitude
+                    self.status.longitude = longitude
+                    self.status.altitude = altitude
+                    self.status.message = f"Arrived at {latitude}, {longitude}"
+                logger.info(f"Navigation to {latitude}, {longitude} successful")
+                return {"success": True, "message": f"Arrived at lat={latitude}, lng={longitude}"}
+            else:
+                with self._lock:
+                    self.status.state = DroneState.HOVERING
+                    self.status.message = "Navigation failed"
+                return {"success": False, "message": "Navigation command failed"}
+                
+        except Exception as e:
+            logger.error(f"Navigation error: {e}")
+            with self._lock:
+                self.status.state = DroneState.ERROR
+                self.status.message = f"Navigation error: {str(e)}"
+            return {"success": False, "message": str(e)}
+    
+    def move_by(self, forward: float, right: float, up: float, rotation: float = 0) -> dict:
+        """Command the drone to move relative to its current position"""
+        if not self.drone or not self.status.connected:
+            return {"success": False, "message": "Drone not connected"}
+        
+        if self.status.state not in [DroneState.HOVERING, DroneState.FLYING]:
+            return {"success": False, "message": f"Drone must be in flight. Current state: {self.status.state.value}"}
+        
+        try:
+            import math
+            psi_rad = rotation * math.pi / 180.0
+            
+            with self._lock:
+                self.status.state = DroneState.FLYING
+                self.status.message = f"Moving fwd={forward}m right={right}m up={up}m..."
+            
+            result = self.drone(
+                moveBy(forward, right, -up, psi_rad)
+            ).wait()
+            
+            if result.success():
+                with self._lock:
+                    self.status.state = DroneState.HOVERING
+                    self.status.message = "Move complete"
+                logger.info(f"Move complete: fwd={forward}, right={right}, up={up}")
+                return {"success": True, "message": f"Move complete"}
+            else:
+                with self._lock:
+                    self.status.state = DroneState.HOVERING
+                    self.status.message = "Move failed"
+                return {"success": False, "message": "Move command failed"}
+                
+        except Exception as e:
+            logger.error(f"Move error: {e}")
+            with self._lock:
+                self.status.state = DroneState.ERROR
+                self.status.message = f"Move error: {str(e)}"
+            return {"success": False, "message": str(e)}
     
     def get_status(self) -> dict:
         """Get current drone status"""
