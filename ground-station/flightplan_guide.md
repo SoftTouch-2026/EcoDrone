@@ -2,13 +2,13 @@
 
 ## 1. Overview
 
-In the Parrot ecosystem, a FlightPlan is a mission defined by a MAVLink `.mavlink` text file. To execute a mission on a drone using Olympe, you must follow a two-step process: Upload (via REST API) and Execute (via Olympe SDK).
+In the Parrot ecosystem, a FlightPlan is a mission defined by a MAVLink `.txt` text file. To execute a mission on a drone using Olympe, you must follow a two-step process: Upload (via REST API) and Execute (via Olympe SDK).
 
 ---
 
 ## 2. Preparing the FlightPlan
 
-Before uploading, ensure your `.mavlink` file meets the following criteria:
+Before uploading, ensure your MAVLink file meets the following criteria:
 
 - **Header:** Must start with `QGC WPL 110` (or the version specified in your config).
 - **Structure:** Tab-separated values with 12 columns per line.
@@ -27,7 +27,7 @@ The drone hosts a web server that manages mission files. You must use a `PUT` re
 |----------|-------|
 | **URL** | `http://192.168.42.1/api/v1/upload/flightplan` |
 | **Method** | `PUT` |
-| **Payload** | Raw binary content of the `.mavlink` file |
+| **Payload** | Raw binary content of the `.txt` MAVLink file |
 
 ### Implementation (Python)
 
@@ -87,7 +87,7 @@ Several conditions must be met for the mission to start.
 - Drone is armed and GPS lock is acquired.
 - Sufficient battery level.
 - Home position is set.
-- `.mavlink` file has been successfully uploaded and UID confirmed.
+- MAVLink file has been successfully uploaded and UID confirmed.
 
 ### Safety Commands
 
