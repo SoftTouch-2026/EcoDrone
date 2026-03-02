@@ -1,4 +1,4 @@
 LATEST_VERSION = "120"
 TAKEOFF = 22
 WAYPOINT = 16
-DEFAULT_FILE_NAME = "Mission.mavlink"
+DEFAULT_FILE_NAME = "Mission.txt"
