@@ -15,10 +15,9 @@ export default function App() {
           <Route path="/command" element={<DirectCommandPage />} />
         </Routes>
         <footer className="max-w-7xl mx-auto mt-12 pt-6 border-t border-spacex-white-10">
-          <div className="flex items-center justify-between text-xs text-spacex-white-30">
-            <span>EcoDrone Ground Station • Ashesi University</span>
-            <span>ANAFI Ai Control System v1.0</span>
-          </div>
+          <p className="text-center text-xs text-spacex-white-30 tracking-wider">
+            © 2026 Soft Touch. All Rights Reserved.
+          </p>
         </footer>
       </div>
     </BrowserRouter>

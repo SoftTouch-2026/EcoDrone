@@ -1,6 +1,6 @@
 /**
  * EcoDrone API Service Layer
- * All communication with the Flask backend goes through here.
+ * All communication with the FastAPI backend goes through here.
  * The Vite dev server proxies /api to http://localhost:5001.
  */
 

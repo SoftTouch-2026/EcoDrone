@@ -1,16 +1,20 @@
 # EcoDrone Backend Dependencies
 # Sprint 0: Hello World - Drone Control API
 
-# Web Framework
-flask>=2.3.0
-flask-cors>=4.0.0
+# Web Framework (FastAPI)
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+
+# CORS middleware
+# (included with FastAPI via starlette)
 
 # Parrot Drone SDK (comment out if not on Linux or testing only)
 # parrot-olympe>=7.7.0
 
 # Utilities
 python-dotenv>=1.0.0
+pydantic>=2.0.0
 
 # Development
 pytest>=7.0.0
-requests>=2.31.0
+httpx>=0.27.0

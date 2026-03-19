@@ -77,34 +77,30 @@ export default function DirectCommandPage() {
                         <button
                             onClick={() => runCommand('Connect', api.connectDrone)}
                             disabled={!!loading}
-                            className="spacex-btn-outline py-4 text-sm flex flex-col items-center gap-1"
+                            className="spacex-btn-outline py-3 text-sm"
                         >
-                            <span className="text-lg">🔗</span>
-                            <span>{loading === 'Connect' ? '...' : 'Connect'}</span>
+                            {loading === 'Connect' ? '...' : '◎ Connect'}
                         </button>
                         <button
                             onClick={() => runCommand('Takeoff', api.takeoff)}
                             disabled={!!loading}
-                            className="spacex-btn-primary py-4 text-sm flex flex-col items-center gap-1"
+                            className="spacex-btn-primary py-3 text-sm"
                         >
-                            <span className="text-lg">🚁</span>
-                            <span>{loading === 'Takeoff' ? '...' : 'Takeoff'}</span>
+                            {loading === 'Takeoff' ? '...' : '△ Takeoff'}
                         </button>
                         <button
                             onClick={() => runCommand('Land', api.land)}
                             disabled={!!loading}
-                            className="spacex-btn-outline py-4 text-sm flex flex-col items-center gap-1"
+                            className="spacex-btn-outline py-3 text-sm"
                         >
-                            <span className="text-lg">🛬</span>
-                            <span>{loading === 'Land' ? '...' : 'Land'}</span>
+                            {loading === 'Land' ? '...' : '▽ Land'}
                         </button>
                         <button
                             onClick={() => runCommand('Disconnect', api.disconnectDrone)}
                             disabled={!!loading}
-                            className="spacex-btn-danger py-4 text-sm flex flex-col items-center gap-1"
+                            className="spacex-btn-outline py-3 text-sm"
                         >
-                            <span className="text-lg">🔌</span>
-                            <span>{loading === 'Disconnect' ? '...' : 'Disconnect'}</span>
+                            {loading === 'Disconnect' ? '...' : '✗ Disconnect'}
                         </button>
                     </div>
                 </div>
@@ -112,7 +108,7 @@ export default function DirectCommandPage() {
                 {/* GPS Navigation */}
                 <div className="spacex-card p-6">
                     <h2 className="spacex-label mb-4 flex items-center gap-2">
-                        <span className="text-base">📍</span>
+                        <span className="text-base">◎</span>
                         GPS Navigation (goto)
                     </h2>
                     <div className="grid grid-cols-3 gap-4 mb-4">
@@ -183,7 +179,7 @@ export default function DirectCommandPage() {
                 {/* Relative Movement */}
                 <div className="spacex-card p-6">
                     <h2 className="spacex-label mb-4 flex items-center gap-2">
-                        <span className="text-base">↗</span>
+                        <span className="text-base">▥</span>
                         Relative Movement (move)
                     </h2>
                     <div className="grid grid-cols-4 gap-3 mb-4">
@@ -219,7 +215,7 @@ export default function DirectCommandPage() {
                 {/* Utility Actions */}
                 <div className="spacex-card p-6">
                     <h2 className="spacex-label mb-4 flex items-center gap-2">
-                        <span className="text-base">⚙</span>
+                        <span className="text-base">▥</span>
                         Utility
                     </h2>
                     <div className="grid grid-cols-2 gap-3">
@@ -234,7 +230,7 @@ export default function DirectCommandPage() {
                             disabled={!!loading}
                             className="spacex-btn-outline py-3 text-sm"
                         >
-                            📊 Refresh Status
+                            ▣ Refresh Status
                         </button>
                         <button
                             onClick={() => runCommand('Battery', async () => {
@@ -247,7 +243,7 @@ export default function DirectCommandPage() {
                             disabled={!!loading}
                             className="spacex-btn-outline py-3 text-sm"
                         >
-                            🔋 Check Battery
+                            ⚡ Check Battery
                         </button>
                     </div>
                 </div>
@@ -276,8 +272,8 @@ export default function DirectCommandPage() {
                                 <div
                                     key={i}
                                     className={`mb-1.5 flex items-start gap-2 ${log.type === 'error' ? 'text-error' :
-                                            log.type === 'success' ? 'text-success' :
-                                                'text-spacex-white-40'
+                                        log.type === 'success' ? 'text-success' :
+                                            'text-spacex-white-40'
                                         }`}
                                 >
                                     <span className="text-spacex-white-30 shrink-0">[{log.timestamp}]</span>

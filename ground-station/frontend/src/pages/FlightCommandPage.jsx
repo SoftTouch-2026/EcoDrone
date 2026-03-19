@@ -203,13 +203,11 @@ export default function FlightCommandPage() {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="spacex-label text-[10px]">Altitude (m)</label>
-                            <input type="range" min="2" max="50" value={altitude} onChange={e => setAltitude(Number(e.target.value))} className="w-full mt-1" />
-                            <div className="text-spacex-white text-sm text-center font-mono">{altitude}m</div>
+                            <input type="number" min="2" max="50" value={altitude} onChange={e => setAltitude(Number(e.target.value))} className="spacex-input text-sm" />
                         </div>
                         <div>
                             <label className="spacex-label text-[10px]">Speed (m/s)</label>
-                            <input type="range" min="1" max="15" value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-full mt-1" />
-                            <div className="text-spacex-white text-sm text-center font-mono">{speed}m/s</div>
+                            <input type="number" min="1" max="15" value={speed} onChange={e => setSpeed(Number(e.target.value))} className="spacex-input text-sm" />
                         </div>
                     </div>
                 </div>
@@ -224,7 +222,7 @@ export default function FlightCommandPage() {
                     >
                         ▸ Send Flight Command
                     </button>
-                    <button onClick={clearAll} className="spacex-btn-danger py-3 px-4 text-sm">
+                    <button onClick={clearAll} className="spacex-btn-outline py-3 px-4 text-sm">
                         ✗ Clear
                     </button>
                 </div>

@@ -121,7 +121,7 @@ export default function MissionsPage() {
                         </button>
                         <button
                             onClick={() => rejectMission(selectedMission)}
-                            className="spacex-btn-danger py-3 px-6 text-sm"
+                            className="spacex-btn-outline py-3 px-6 text-sm"
                         >
                             ✗ Reject
                         </button>

@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+@theme {
+  --color-spacex-white: rgba(240, 240, 250, 1);
+  --color-spacex-white-90: rgba(240, 240, 250, 0.9);
+  --color-spacex-white-80: rgba(240, 240, 250, 0.8);
+  --color-spacex-white-70: rgba(240, 240, 250, 0.7);
+  --color-spacex-white-60: rgba(240, 240, 250, 0.6);
+  --color-spacex-white-50: rgba(240, 240, 250, 0.5);
+  --color-spacex-white-40: rgba(240, 240, 250, 0.4);
+  --color-spacex-white-30: rgba(240, 240, 250, 0.3);
+  --color-spacex-white-15: rgba(240, 240, 250, 0.15);
+  --color-spacex-white-10: rgba(240, 240, 250, 0.1);
+  --color-spacex-white-05: rgba(240, 240, 250, 0.05);
+  --color-spacex-card: rgba(255, 255, 255, 0.03);
+  --color-spacex-card-hover: rgba(255, 255, 255, 0.06);
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 400;
+    background-color: #000;
+    color: rgba(240, 240, 250, 1);
+}
+
+@keyframes pulse-ring {
+    0% { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(1.4); opacity: 0; }
+}
+
+@keyframes slide-in {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.mission-notification {
+    animation: slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fade-in {
+    animation: fade-in 0.3s ease-out;
+}
+
+.pulse-ring::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    animation: pulse-ring 1.5s ease-out infinite;
+}
+
+/* SpaceX-style minimal scrollbar */
+.scrollable::-webkit-scrollbar {
+    width: 4px;
+}
+.scrollable::-webkit-scrollbar-track {
+    background: transparent;
+}
+.scrollable::-webkit-scrollbar-thumb {
+    background: rgba(240, 240, 250, 0.2);
+    border-radius: 2px;
+}
+.scrollable::-webkit-scrollbar-thumb:hover {
+    background: rgba(240, 240, 250, 0.3);
+}
+
+/* SpaceX-style card styling - sharp corners, subtle borders */
+.spacex-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(240, 240, 250, 0.1);
+}
+.spacex-card:hover {
+    border-color: rgba(240, 240, 250, 0.2);
+}
+.spacex-card-subtle {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(240, 240, 250, 0.05);
+}
+
+/* SpaceX-style data row - horizontal separator */
+.spacex-data-row {
+    border-bottom: 1px solid rgba(240, 240, 250, 0.1);
+    padding: 12px 0;
+}
+.spacex-data-row:last-child {
+    border-bottom: none;
+}
+
+/* SpaceX button styles */
+button {
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.spacex-btn-primary {
+    background: rgba(240, 240, 250, 1);
+    color: #000;
+    border: 1px solid rgba(240, 240, 250, 1);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+}
+.spacex-btn-primary:hover {
+    background: rgba(240, 240, 250, 0.9);
+}
+
+.spacex-btn-outline {
+    background: transparent;
+    color: rgba(240, 240, 250, 1);
+    border: 1px solid rgba(240, 240, 250, 0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+}
+.spacex-btn-outline:hover {
+    border-color: rgba(240, 240, 250, 0.6);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* SpaceX uppercase label */
+.spacex-label {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+    color: rgba(240, 240, 250, 0.5);
+    font-weight: 500;
+}
