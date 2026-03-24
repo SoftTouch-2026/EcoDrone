@@ -4,3 +4,10 @@ node_modules
 
 /src/generated/prisma
 /dist
+
+# Python virtual environments
+*-venv/
+venv/
+.venv/
+__pycache__/
+*.pyc
