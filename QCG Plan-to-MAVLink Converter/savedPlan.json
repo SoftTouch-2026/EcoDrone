@@ -1,0 +1,78 @@
+{
+ "dirty": false,
+ "latitudeDelta": 0.0,
+ "longitudeDelta": 0.0,
+ "date": 1773918883094,
+ "rotation": 0,
+ "tilt": 0,
+ "longitude": -0.22010547,
+ "productId": 4381,
+ "title": "2026-03-19",
+ "product": "ANAFI Ai",
+ "zoomLevel": 19.5,
+ "progressive_course_activated": true,
+ "latitude": 5.75982965,
+ "uuid": "ec7bceae-ad31-4052-abdb-279f9ed955f8",
+ "version": 1,
+ "plan": {
+  "takeoff": [
+   {
+    "type": "Tilt",
+    "angle": 90,
+    "speed": 180
+   }
+  ],
+  "poi": [],
+  "wayPoints": [
+   {
+    "follow": 1,
+    "continue": true,
+    "speed": 5,
+    "yaw": 0.0,
+    "longitude": -0.22007758,
+    "lastYaw": 0,
+    "actions": [],
+    "latitude": 5.75978701,
+    "followPOI": false,
+    "altitude": 20
+   },
+   {
+    "follow": 1,
+    "continue": true,
+    "speed": 5,
+    "yaw": 0.0,
+    "longitude": -0.22012247,
+    "lastYaw": 0,
+    "actions": [],
+    "latitude": 5.75968145,
+    "followPOI": false,
+    "altitude": 20
+   },
+   {
+    "follow": 1,
+    "continue": true,
+    "speed": 5,
+    "yaw": 0.0,
+    "longitude": -0.22016872,
+    "lastYaw": 0,
+    "actions": [],
+    "latitude": 5.7597004,
+    "followPOI": false,
+    "altitude": 20
+   },
+   {
+    "follow": 1,
+    "continue": true,
+    "speed": 5,
+    "yaw": 0.0,
+    "longitude": -0.22012771446546253,
+    "lastYaw": 0,
+    "actions": [],
+    "latitude": 5.759773658624331,
+    "followPOI": false,
+    "altitude": 20
+   }
+  ]
+ },
+ "mapType": 4
+}
