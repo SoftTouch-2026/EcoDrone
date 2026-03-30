@@ -31,6 +31,7 @@ export const tripRoutes = () => {
      *       - Trips
      *     summary: Create a new trip
      *     description: Create a delivery trip for an order
+     *     operationId: handleCreateTripRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -72,6 +73,7 @@ export const tripRoutes = () => {
      *       - Trips
      *     summary: Update trip status
      *     description: Update the status of an existing trip
+     *     operationId: handleUpdateTripRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -105,16 +107,17 @@ export const tripRoutes = () => {
 
     /**
      * @openapi
-     * /trips/deleteTrip:
+     * /trips/deleteTrip/{id}:
      *   delete:
      *     tags:
      *       - Trips
      *     summary: Delete a trip
      *     description: Remove a trip from the system
+     *     operationId: handleDeleteTripRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
+     *       - in: path
      *         name: id
      *         required: true
      *         schema:
@@ -128,7 +131,7 @@ export const tripRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.delete('/deleteTrip', [
+    router.delete('/deleteTrip/:id', [
         requireUser,
         validateResource(DeleteTripSchema),
         handleDeleteTripRequest,
@@ -136,16 +139,17 @@ export const tripRoutes = () => {
 
     /**
      * @openapi
-     * /trips/getTrip:
+     * /trips/getTrip/{id}:
      *   get:
      *     tags:
      *       - Trips
      *     summary: Get single trip
      *     description: Retrieve details of a specific trip by ID
+     *     operationId: handleGetTripRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
+     *       - in: path
      *         name: id
      *         required: true
      *         schema:
@@ -176,7 +180,7 @@ export const tripRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.get('/getTrip', [
+    router.get('/getTrip/:id', [
         requireUser,
         validateResource(GetTripSchema),
         handleGetTripRequest,
@@ -190,6 +194,7 @@ export const tripRoutes = () => {
      *       - Trips
      *     summary: Get paginated list of trips
      *     description: Retrieve a paginated list of all trips
+     *     operationId: handleGetTripsRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
@@ -246,6 +251,7 @@ export const tripRoutes = () => {
      *       - Trips
      *     summary: Start a trip
      *     description: Mark a trip as ongoing and record the start time
+     *     operationId: handleStartTripRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -295,6 +301,7 @@ export const tripRoutes = () => {
      *       - Trips
      *     summary: End a trip
      *     description: Mark a trip as completed and record the end time
+     *     operationId: handleEndTripRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:

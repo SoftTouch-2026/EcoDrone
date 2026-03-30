@@ -29,10 +29,10 @@ export const GetLocationParams = {
     }),
 }
 
-export const GetLocationsParams = {
-    params: z.object({
-        page: z.string().min(1),
-        limit: z.string().min(1),
+export const GetLocationsQuery = {
+    query: z.object({
+        page: z.string().min(1).optional(),
+        limit: z.string().min(1).optional(),
     }),
 }
 
@@ -40,4 +40,4 @@ export const CreateLocationSchema = z.object({ ...CreateLocationPayload })
 export const UpdateLocationSchema = z.object({ ...UpdateLocationPayload })
 export const DeleteLocationSchema = z.object({ ...DeleteLocationParams })
 export const GetLocationSchema = z.object({ ...GetLocationParams })
-export const GetLocationsSchema = z.object({ ...GetLocationsParams })
+export const GetLocationsSchema = z.object({ ...GetLocationsQuery })

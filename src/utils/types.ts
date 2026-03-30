@@ -4,6 +4,7 @@ import {
     DeleteUserSchema,
     SignInSchema,
     SignUpSchema,
+    ResetPasswordSchema,
 } from '../schemas/auth.schemas'
 import {
     CreateDroneSchema,
@@ -61,6 +62,21 @@ import {
     DeleteOrderItemSchema,
     GetOrderItemsSchema,
 } from '../schemas/orderItem.schemas'
+import {
+    CreateVendorSchema,
+    UpdateVendorSchema,
+    DeleteVendorSchema,
+    GetVendorSchema,
+    GetVendorsSchema,
+    GetVendorMenuSchema,
+} from '../schemas/vendors.schemas'
+import {
+    CreateAdminUserSchema,
+    UpdateAdminUserSchema,
+    GetAdminUserSchema,
+    ListAdminUsersSchema,
+    DeleteAdminUserSchema,
+} from '../schemas/admin.schemas'
 
 export type CreateuserInput = TypeOf<typeof SignUpSchema>
 export type CreateDroneInput = TypeOf<typeof CreateDroneSchema>
@@ -90,6 +106,7 @@ export type EditUserInput = TypeOf<typeof EditUserSchema>
 export type DeleteUserInput = TypeOf<typeof DeleteUserSchema>
 export type SignInInput = TypeOf<typeof SignInSchema>
 export type SignUpInput = TypeOf<typeof SignUpSchema>
+export type ResetPasswordInput = TypeOf<typeof ResetPasswordSchema>
 export type CreateMenuInput = TypeOf<typeof CreateMenuSchema>
 export type UpdateMenuInput = TypeOf<typeof UpdateMenuSchema>
 export type DeleteMenuInput = TypeOf<typeof DeleteMenuSchema>
@@ -107,3 +124,53 @@ export type CreateOrderItemInput = TypeOf<typeof CreateOrderItemSchema>
 export type UpdateOrderItemInput = TypeOf<typeof UpdateOrderItemSchema>
 export type DeleteOrderItemInput = TypeOf<typeof DeleteOrderItemSchema>
 export type GetOrderItemsInput = TypeOf<typeof GetOrderItemsSchema>
+export type CreateVendorInput = TypeOf<typeof CreateVendorSchema>
+export type UpdateVendorInput = TypeOf<typeof UpdateVendorSchema>
+export type DeleteVendorInput = TypeOf<typeof DeleteVendorSchema>
+export type GetVendorInput = TypeOf<typeof GetVendorSchema>
+export type GetVendorsInput = TypeOf<typeof GetVendorsSchema>
+export type GetVendorMenuInput = TypeOf<typeof GetVendorMenuSchema>
+export type CreateAdminUserInput = TypeOf<typeof CreateAdminUserSchema>
+export type UpdateAdminUserInput = TypeOf<typeof UpdateAdminUserSchema>
+export type GetAdminUserInput = TypeOf<typeof GetAdminUserSchema>
+export type ListAdminUsersInput = TypeOf<typeof ListAdminUsersSchema>
+export type DeleteAdminUserInput = TypeOf<typeof DeleteAdminUserSchema>
+
+export type VendorOrderItemDto = {
+    id: string
+    order_id: string | null
+    item_id: string | null
+    order_quantity: number | null
+    vendor_fulfilled_at: Date | null
+    menu: {
+        id: string
+        name: string | null
+        unit_cost: any
+        thumbnail_url: string | null
+    } | null
+}
+
+export type VendorOrderDto = {
+    id: string
+    status: string | null
+    pickup_location: { id: string; name: string | null }
+    dropoff_location: { id: string; name: string | null }
+    customer:
+        | {
+              id: string
+              email: string
+              first_name: string | null
+              last_name: string | null
+          }
+        | null
+    created_at: Date
+    updated_at: Date
+    order_item: VendorOrderItemDto[]
+}
+
+export type VendorOrdersListResponse = {
+    data: VendorOrderDto[]
+    total: number
+    page: number
+    limit: number
+}

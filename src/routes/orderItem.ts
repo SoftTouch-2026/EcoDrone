@@ -25,6 +25,7 @@ export const orderItemRoutes = () => {
      *       - Order Items
      *     summary: Create order item
      *     description: Add an item to an order with quantity
+     *     operationId: handleCreateOrderItemRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -70,6 +71,7 @@ export const orderItemRoutes = () => {
      *       - Order Items
      *     summary: Update order item quantity
      *     description: Update the quantity of an item in an order
+     *     operationId: handleUpdateOrderItemRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -103,16 +105,17 @@ export const orderItemRoutes = () => {
 
     /**
      * @openapi
-     * /orderItem/deleteOrderItem:
+     * /orderItem/deleteOrderItem/{id}:
      *   delete:
      *     tags:
      *       - Order Items
      *     summary: Delete order item
      *     description: Remove an item from an order
+     *     operationId: handleDeleteOrderItemRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
+     *       - in: path
      *         name: id
      *         required: true
      *         schema:
@@ -126,7 +129,7 @@ export const orderItemRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.delete('/deleteOrderItem', [
+    router.delete('/deleteOrderItem/:id', [
         requireUser,
         validateResource(DeleteOrderItemSchema),
         handleDeleteOrderItemRequest,
@@ -140,6 +143,7 @@ export const orderItemRoutes = () => {
      *       - Order Items
      *     summary: Get all items in order
      *     description: Retrieve all items in a specific order
+     *     operationId: handleGetOrderItemsRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:

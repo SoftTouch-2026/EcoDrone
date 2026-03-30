@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+import { sendError } from '../utils/errorResponse'
 import {
     CreateLocationInput,
     UpdateLocationInput,
@@ -22,7 +23,7 @@ export const handleCreateLocationRequest = async (
         const location = await createLocationService(req.body)
         res.status(201).json(location)
     } catch (e) {
-        res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
 
@@ -34,7 +35,7 @@ export const handleUpdateLocationRequest = async (
         const location = await updateLocationService(req.body)
         res.status(200).json(location)
     } catch (e) {
-        res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
 
@@ -46,7 +47,7 @@ export const handleDeleteLocationRequest = async (
         const location = await deleteLocationService(req.params)
         res.status(200).json(location)
     } catch (e) {
-        res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
 
@@ -58,18 +59,18 @@ export const handleGetLocationRequest = async (
         const location = await getLocationService(req.params)
         res.status(200).json(location)
     } catch (e) {
-        res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
 
 export const handleGetLocationsRequest = async (
-    req: Request<GetLocationsInput['params'], {}, {}>,
+    req: Request<{}, {}, {}, GetLocationsInput['query']>,
     res: Response
 ) => {
     try {
-        const locations = await getLocationsService(req.params)
+        const locations = await getLocationsService(req.query)
         res.status(200).json(locations)
     } catch (e) {
-        res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }

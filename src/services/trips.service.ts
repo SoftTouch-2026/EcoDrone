@@ -55,28 +55,70 @@ export const deleteTripService = async (data: DeleteTripInput['params']) => {
     }
 }
 
+function mapTripToSpec(trip: any) {
+    const order = trip.orders
+    return {
+        id: trip.id,
+        order_id: trip.order_id,
+        status: trip.status,
+        start_time: trip.start_time,
+        end_time: trip.end_time,
+        drone_id: order?.assigned_drone ?? null,
+        pickup_location_id: order?.pickup_location ?? null,
+        dropoff_location_id: order?.dropoff_location ?? null,
+        created_at: trip.created_at,
+        updated_at: trip.updated_at,
+    }
+}
+
 export const getTripService = async (data: GetTripInput['params']) => {
     try {
         const { id } = data
         const trip = await prisma.trips.findUnique({
-            where: {
-                id,
+            where: { id },
+            include: {
+                orders: {
+                    select: {
+                        assigned_drone: true,
+                        pickup_location: true,
+                        dropoff_location: true,
+                    },
+                },
             },
         })
-        return trip
+        if (!trip) return null
+        return mapTripToSpec(trip)
     } catch (e) {
         throw e
     }
 }
 
-export const getTripsService = async (data: GetTripsInput['params']) => {
+export const getTripsService = async (data: GetTripsInput['query']) => {
     try {
-        const { page, limit } = data
-        const trips = await prisma.trips.findMany({
-            skip: (parseInt(page) - 1) * parseInt(limit),
-            take: parseInt(limit),
-        })
-        return trips
+        const page = parseInt(data.page || '1', 10)
+        const limit = parseInt(data.limit || '10', 10)
+        const skip = (page - 1) * limit
+        const where = {}
+        const [tripsRaw, total] = await Promise.all([
+            prisma.trips.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { created_at: 'desc' },
+                include: {
+                    orders: {
+                        select: {
+                            assigned_drone: true,
+                            pickup_location: true,
+                            dropoff_location: true,
+                        },
+                    },
+                },
+            }),
+            prisma.trips.count({ where }),
+        ])
+        const list = tripsRaw.map(mapTripToSpec)
+        return { data: list, total, page, limit }
     } catch (e) {
         throw e
     }

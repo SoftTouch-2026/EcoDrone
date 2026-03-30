@@ -25,6 +25,7 @@ export const cartRoutes = () => {
      *       - Cart
      *     summary: Create a new cart
      *     description: Create a shopping cart for a user
+     *     operationId: handleCreateCartRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -55,16 +56,17 @@ export const cartRoutes = () => {
 
     /**
      * @openapi
-     * /cart/deleteCart:
+     * /cart/deleteCart/{id}:
      *   delete:
      *     tags:
      *       - Cart
      *     summary: Delete a cart
      *     description: Remove a cart and all its items
+     *     operationId: handleDeleteCartRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
+     *       - in: path
      *         name: id
      *         required: true
      *         schema:
@@ -78,7 +80,7 @@ export const cartRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.delete('/deleteCart', [
+    router.delete('/deleteCart/:id', [
         requireUser,
         validateResource(DeleteCartSchema),
         handleDeleteCartRequest,
@@ -86,16 +88,17 @@ export const cartRoutes = () => {
 
     /**
      * @openapi
-     * /cart/getCart:
+     * /cart/getCart/{id}:
      *   get:
      *     tags:
      *       - Cart
      *     summary: Get cart by ID
      *     description: Retrieve cart details including all items
+     *     operationId: handleGetCartRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
+     *       - in: path
      *         name: id
      *         required: true
      *         schema:
@@ -109,7 +112,7 @@ export const cartRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.get('/getCart', [
+    router.get('/getCart/:id', [
         requireUser,
         validateResource(GetCartSchema),
         handleGetCartRequest,
@@ -117,17 +120,18 @@ export const cartRoutes = () => {
 
     /**
      * @openapi
-     * /cart/getCartByUser:
+     * /cart/getCartByUser/{userId}:
      *   get:
      *     tags:
      *       - Cart
      *     summary: Get cart by user ID
      *     description: Retrieve a user's cart with all items
+     *     operationId: handleGetCartByUserRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
-     *         name: user_id
+     *       - in: path
+     *         name: userId
      *         required: true
      *         schema:
      *           type: string
@@ -140,7 +144,7 @@ export const cartRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.get('/getCartByUser', [
+    router.get('/getCartByUser/:userId', [
         requireUser,
         validateResource(GetCartByUserSchema),
         handleGetCartByUserRequest,

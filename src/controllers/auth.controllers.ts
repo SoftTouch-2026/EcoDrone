@@ -4,62 +4,49 @@ import {
     SignUpInput,
     EditUserInput,
     DeleteUserInput,
+    ResetPasswordInput,
 } from '../utils/types'
-import { signJWT, signRefreshJWT, verifyRefreshJWT } from '../utils/jwtUtils'
-import { prisma } from '../utils/connect'
-import { compare, hash } from 'bcrypt'
-import { JwtPayload } from 'jsonwebtoken'
 import {
+    refreshTokenService,
     signUpService,
     signInService,
     editUserService,
     deleteUserService,
+    resetPasswordService,
 } from '../services/auth.service'
+import { createAuditLog } from '../services/audit.service'
 
 export const handleRefreshRequest = async (
     req: Request<{}, {}, any>,
     res: Response
 ) => {
     try {
-        const refreshToken = req.body.refreshToken
-        if (!refreshToken) {
-            return res.status(401).send({
-                status: 'error',
-                message: 'Unauthorized',
-            })
-        }
-        const decoded = verifyRefreshJWT(refreshToken)
-        if (!decoded) {
-            return res.status(401).send({
-                status: 'error',
-                message: 'Unauthorized',
-            })
-        }
-        const user = await prisma.users.findUnique({
-            where: {
-                id: (decoded as JwtPayload)?.id as unknown as string,
-            },
+        const tokens = await refreshTokenService(req.body.refreshToken)
+        await createAuditLog({
+            action: 'auth.refresh',
+            resourceType: 'user',
+            actorId: res.locals.user?.id,
+            message: 'Token refreshed successfully',
+            success: true,
+            req,
         })
-        if (!user) {
-            return res.status(401).send({
-                status: 'error',
-                message: 'Unauthorized',
-            })
-        }
-        const newAccessToken = signJWT(user)
-        const newRefreshToken = signRefreshJWT(user)
         return res.status(200).send({
             status: 'success',
             message: 'Token refreshed successfully',
-            data: {
-                accessToken: newAccessToken,
-                refreshToken: newRefreshToken,
-            },
+            data: tokens,
         })
-    } catch (e) {
-        res.status(403).send({
+    } catch (e: any) {
+        await createAuditLog({
+            action: 'auth.refresh',
+            resourceType: 'user',
+            message: e?.message ?? 'Refresh failed',
+            success: false,
+            req,
+        })
+        const statusCode = e.message === 'Unauthorized' ? 401 : 403
+        return res.status(statusCode).send({
             status: 'error',
-            message: 'Forbidden',
+            message: e.message,
         })
     }
 }
@@ -69,14 +56,33 @@ export const handleSignUpRequest = async (
     res: Response
 ) => {
     try {
-        const { user, token } = await signUpService(req.body)
-        return res.status(200).send({
+        const { user, accessToken, refreshToken } = await signUpService(
+            req.body
+        )
+        await createAuditLog({
+            action: 'auth.sign_up',
+            resourceType: 'user',
+            resourceId: user.id,
+            message: 'User registered',
+            metadata: { email: req.body.email },
+            success: true,
+            req,
+        })
+        return res.status(201).send({
             status: 'success',
             message: 'User created successfully',
-            data: { user, token },
+            data: { user, accessToken, refreshToken },
         })
     } catch (e: any) {
-        res.status(400).send({
+        await createAuditLog({
+            action: 'auth.sign_up',
+            resourceType: 'user',
+            message: e?.message ?? 'Sign up failed',
+            metadata: { email: req.body.email },
+            success: false,
+            req,
+        })
+        return res.status(400).send({
             status: 'error',
             message: e.message,
         })
@@ -88,20 +94,38 @@ export const handleSignInRequest = async (
     res: Response
 ) => {
     try {
-        const user = await signInService(req.body)
-        const accessToken = signJWT(user[0])
-        const refreshToken = signRefreshJWT(user[0])
+        const { user, accessToken, refreshToken } = await signInService(
+            req.body
+        )
+        await createAuditLog({
+            action: 'auth.sign_in',
+            resourceType: 'user',
+            resourceId: user.id,
+            actorId: user.id,
+            message: 'Sign in successful',
+            metadata: { email: req.body.email },
+            success: true,
+            req,
+        })
         return res.status(200).send({
             status: 'success',
             message: 'User signed in successfully',
             data: {
-                user: user[0],
+                user,
                 accessToken,
                 refreshToken,
             },
         })
     } catch (e: any) {
-        res.status(400).send({
+        await createAuditLog({
+            action: 'auth.sign_in',
+            resourceType: 'user',
+            message: e?.message ?? 'Sign in failed',
+            metadata: { email: req.body.email },
+            success: false,
+            req,
+        })
+        return res.status(400).send({
             status: 'error',
             message: e.message,
         })
@@ -114,13 +138,31 @@ export const handleEditUserRequest = async (
 ) => {
     try {
         const user = await editUserService(req.body)
+        await createAuditLog({
+            action: 'auth.edit_user',
+            resourceType: 'user',
+            resourceId: user.id,
+            actorId: res.locals.user?.id,
+            message: 'User profile updated',
+            success: true,
+            req,
+        })
         return res.status(200).send({
             status: 'success',
             message: 'User updated successfully',
             data: user,
         })
     } catch (e: any) {
-        res.status(400).send({
+        await createAuditLog({
+            action: 'auth.edit_user',
+            resourceType: 'user',
+            resourceId: req.body.id,
+            actorId: res.locals.user?.id,
+            message: e?.message ?? 'Edit user failed',
+            success: false,
+            req,
+        })
+        return res.status(400).send({
             status: 'error',
             message: e.message,
         })
@@ -131,15 +173,78 @@ export const handleDeleteUserRequest = async (
     req: Request<DeleteUserInput['params'], {}>,
     res: Response
 ) => {
+    const targetId = req.params?.id
     try {
         const user = await deleteUserService(req.params)
+        await createAuditLog({
+            action: 'auth.delete_user',
+            resourceType: 'user',
+            resourceId: targetId,
+            actorId: res.locals.user?.id,
+            message: 'User account deleted',
+            success: true,
+            req,
+        })
         return res.status(200).send({
             status: 'success',
             message: 'User deleted successfully',
             data: user,
         })
     } catch (e: any) {
-        res.status(400).send({
+        await createAuditLog({
+            action: 'auth.delete_user',
+            resourceType: 'user',
+            resourceId: targetId,
+            actorId: res.locals.user?.id,
+            message: e?.message ?? 'Delete user failed',
+            success: false,
+            req,
+        })
+        return res.status(400).send({
+            status: 'error',
+            message: e.message,
+        })
+    }
+}
+
+export const handleResetPasswordRequest = async (
+    req: Request<{}, {}, ResetPasswordInput['body']>,
+    res: Response
+) => {
+    const userId = res.locals.user?.id
+    if (!userId) {
+        return res.status(401).send({
+            status: 'error',
+            message: 'Unauthorized',
+        })
+    }
+    try {
+        const user = await resetPasswordService(userId, req.body)
+        await createAuditLog({
+            action: 'auth.reset_password',
+            resourceType: 'user',
+            resourceId: user.id,
+            actorId: userId,
+            message: 'Password reset successfully',
+            success: true,
+            req,
+        })
+        return res.status(200).send({
+            status: 'success',
+            message: 'Password reset successfully',
+            data: { id: user.id, should_reset_password: user.should_reset_password },
+        })
+    } catch (e: any) {
+        await createAuditLog({
+            action: 'auth.reset_password',
+            resourceType: 'user',
+            resourceId: userId,
+            actorId: userId,
+            message: e?.message ?? 'Password reset failed',
+            success: false,
+            req,
+        })
+        return res.status(400).send({
             status: 'error',
             message: e.message,
         })

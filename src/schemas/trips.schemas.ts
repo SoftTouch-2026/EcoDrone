@@ -38,10 +38,10 @@ export const GetTripParams = {
     }),
 }
 
-export const GetTripsParams = {
-    params: z.object({
-        page: z.string().min(1),
-        limit: z.string().min(1),
+export const GetTripsQuery = {
+    query: z.object({
+        page: z.string().min(1).optional(),
+        limit: z.string().min(1).optional(),
     }),
 }
 
@@ -51,4 +51,4 @@ export const EndTripSchema = z.object({ ...EndTripPayload })
 export const UpdateTripSchema = z.object({ ...UpdateTripPayload })
 export const DeleteTripSchema = z.object({ ...DeleteTripParams })
 export const GetTripSchema = z.object({ ...GetTripParams })
-export const GetTripsSchema = z.object({ ...GetTripsParams })
+export const GetTripsSchema = z.object({ ...GetTripsQuery })

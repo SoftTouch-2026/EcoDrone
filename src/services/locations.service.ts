@@ -76,15 +76,22 @@ export const getLocationService = async (data: GetLocationInput['params']) => {
 }
 
 export const getLocationsService = async (
-    data: GetLocationsInput['params']
+    data: GetLocationsInput['query']
 ) => {
     try {
-        const { page, limit } = data
-        const locations = await prisma.locations.findMany({
-            skip: (parseInt(page) - 1) * parseInt(limit),
-            take: parseInt(limit),
-        })
-        return locations
+        const page = parseInt(data.page || '1', 10)
+        const limit = parseInt(data.limit || '10', 10)
+        const skip = (page - 1) * limit
+        const where = {}
+        const [locations, total] = await Promise.all([
+            prisma.locations.findMany({
+                where,
+                skip,
+                take: limit,
+            }),
+            prisma.locations.count({ where }),
+        ])
+        return { data: locations, total, page, limit }
     } catch (e) {
         throw e
     }
