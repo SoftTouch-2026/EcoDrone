@@ -33,10 +33,10 @@ export const GetDroneParams = {
     }),
 }
 
-export const GetDronesParams = {
-    params: z.object({
-        page: z.string().min(1),
-        limit: z.string().min(1),
+export const GetDronesQuery = {
+    query: z.object({
+        page: z.string().min(1).optional(),
+        limit: z.string().min(1).optional(),
     }),
 }
 
@@ -44,5 +44,5 @@ export const CreateDroneSchema = z.object({ ...CreateDronePayload })
 export const UpdateDroneSchema = z.object({ ...UpdateDronePayload })
 export const DeleteDroneSchema = z.object({ ...DeleteDroneParams })
 export const GetDroneSchema = z.object({ ...GetDroneParams })
-export const GetDronesSchema = z.object({ ...GetDronesParams })
+export const GetDronesSchema = z.object({ ...GetDronesQuery })
 export const AssignDroneSchema = z.object({ ...AssignDronePayload })

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+import { sendError } from '../utils/errorResponse'
 import {
     CreateMenuInput,
     UpdateMenuInput,
@@ -22,7 +23,7 @@ export const handleCreateMenuRequest = async (
         const menu = await createMenuService(req.body)
         return res.status(201).send(menu)
     } catch (e) {
-        return res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
 
@@ -34,7 +35,7 @@ export const handleUpdateMenuRequest = async (
         const menu = await updateMenuService(req.body)
         return res.status(200).send(menu)
     } catch (e) {
-        return res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
 
@@ -46,7 +47,7 @@ export const handleDeleteMenuRequest = async (
         const menu = await deleteMenuService(req.params)
         return res.status(200).send(menu)
     } catch (e) {
-        return res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
 
@@ -58,7 +59,7 @@ export const handleGetMenuRequest = async (
         const menu = await getMenuService(req.params)
         return res.status(200).send(menu)
     } catch (e) {
-        return res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
 
@@ -70,6 +71,6 @@ export const handleGetMenusRequest = async (
         const menus = await getMenusService(req.params)
         return res.status(200).send(menus)
     } catch (e) {
-        return res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }

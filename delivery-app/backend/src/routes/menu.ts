@@ -27,6 +27,7 @@ export const menuRoutes = () => {
      *       - Menu
      *     summary: Create a new menu item
      *     description: Add a new item to the menu with name, price, and optional description
+     *     operationId: handleCreateMenuRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -73,6 +74,7 @@ export const menuRoutes = () => {
      *       - Menu
      *     summary: Update menu item
      *     description: Update details of an existing menu item
+     *     operationId: handleUpdateMenuRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -112,16 +114,17 @@ export const menuRoutes = () => {
 
     /**
      * @openapi
-     * /menu/deleteMenu:
+     * /menu/deleteMenu/{id}:
      *   delete:
      *     tags:
      *       - Menu
      *     summary: Delete menu item
      *     description: Remove a menu item from the system
+     *     operationId: handleDeleteMenuRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
+     *       - in: path
      *         name: id
      *         required: true
      *         schema:
@@ -135,7 +138,7 @@ export const menuRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.delete('/deleteMenu', [
+    router.delete('/deleteMenu/:id', [
         requireUser,
         validateResource(DeleteMenuSchema),
         handleDeleteMenuRequest,
@@ -143,16 +146,17 @@ export const menuRoutes = () => {
 
     /**
      * @openapi
-     * /menu/getMenu:
+     * /menu/getMenu/{id}:
      *   get:
      *     tags:
      *       - Menu
      *     summary: Get single menu item
      *     description: Retrieve details of a specific menu item
+     *     operationId: handleGetMenuRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
+     *       - in: path
      *         name: id
      *         required: true
      *         schema:
@@ -166,7 +170,7 @@ export const menuRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.get('/getMenu', [
+    router.get('/getMenu/:id', [
         requireUser,
         validateResource(GetMenuSchema),
         handleGetMenuRequest,
@@ -180,6 +184,7 @@ export const menuRoutes = () => {
      *       - Menu
      *     summary: Get paginated list of menu items
      *     description: Retrieve all menu items with pagination
+     *     operationId: handleGetMenusRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:

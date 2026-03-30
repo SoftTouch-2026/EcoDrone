@@ -19,14 +19,15 @@ model drones {
 }
 
 model locations {
-  id                                        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name                                      String?  @db.VarChar
-  latitude                                  Decimal? @db.Decimal
-  longitude                                 Decimal? @db.Decimal
-  created_at                                DateTime @default(now()) @db.Timestamptz(6)
-  updated_at                                DateTime @updatedAt @db.Timestamptz(6)
-  orders_orders_dropoff_locationTolocations orders[] @relation("orders_dropoff_locationTolocations")
-  orders_orders_pickup_locationTolocations  orders[] @relation("orders_pickup_locationTolocations")
+  id                                        String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                                      String?   @db.VarChar
+  latitude                                  Decimal?  @db.Decimal
+  longitude                                 Decimal?  @db.Decimal
+  created_at                                DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime  @updatedAt @db.Timestamptz(6)
+  orders_orders_dropoff_locationTolocations orders[]  @relation("orders_dropoff_locationTolocations")
+  orders_orders_pickup_locationTolocations  orders[]  @relation("orders_pickup_locationTolocations")
+  vendors                                   vendors[]
 }
 
 model orders {
@@ -57,16 +58,35 @@ model trips {
 }
 
 model users {
-  id            String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  email         String     @db.VarChar
-  password_hash String     @db.VarChar
-  first_name    String?    @db.VarChar
-  last_name     String?    @db.VarChar
-  type          user_type?
-  created_at    DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime   @updatedAt @db.Timestamptz(6)
-  cart          cart[]
-  orders        orders[]
+  id                    String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email                 String      @db.VarChar
+  password_hash         String      @db.VarChar
+  first_name            String?     @db.VarChar
+  created_at            DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime    @updatedAt @db.Timestamptz(6)
+  last_name             String?     @db.VarChar
+  type                  user_type?
+  should_reset_password Boolean     @default(false)
+  vendor_id             String?     @db.Uuid
+  audit_log             audit_log[] @relation("AuditLogActor")
+  cart                  cart[]
+  orders                orders[]
+  vendors               vendors?    @relation("VendorUsers", fields: [vendor_id], references: [id], onUpdate: NoAction)
+}
+
+model audit_log {
+  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  action        String   @db.VarChar
+  actor_id      String?  @db.Uuid
+  resource_type String   @db.VarChar
+  resource_id   String?  @db.VarChar
+  message       String?  @db.VarChar
+  metadata      Json?
+  success       Boolean
+  ip            String?  @db.VarChar
+  user_agent    String?  @db.VarChar
+  users         users?   @relation("AuditLogActor", fields: [actor_id], references: [id], onUpdate: NoAction)
 }
 
 model cart {
@@ -80,34 +100,65 @@ model cart {
 
 model cart_item {
   id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  item_id    String?   @db.Uuid
-  quanity    Int?
+  quantity   Int?
   created_at DateTime? @db.Timestamptz(6)
   updated_at DateTime? @db.Timestamptz(6)
   cart_id    String?   @db.Uuid
+  item_id    String    @db.Uuid
   cart       cart?     @relation(fields: [cart_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  menu       menu?     @relation(fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  menu       menu      @relation(fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model menu {
-  id          String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name        String?      @db.VarChar
-  unit_cost   Decimal?     @db.Decimal
-  description String?      @db.VarChar
-  thumbnail   String?      @db.VarChar
-  cart_item   cart_item[]
-  order_item  order_item[]
+  id            String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  vendor_id     String?        @db.Uuid
+  name          String?        @db.VarChar
+  category      menu_category?
+  unit_cost     Decimal?       @db.Decimal
+  description   String?        @db.VarChar
+  thumbnail_url String?        @db.VarChar
+  available     Boolean        @default(true)
+  created_at    DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime       @updatedAt @db.Timestamptz(6)
+  cart_item     cart_item[]
+  vendors       vendors?       @relation(fields: [vendor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  order_item    order_item[]
 }
 
 model order_item {
-  id             String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  order_id       String?   @db.Uuid
-  item_id        String?   @db.Uuid
-  order_quantity Int?
-  created_at     DateTime? @db.Timestamptz(6)
-  updated_at     DateTime? @db.Timestamptz(6)
-  menu           menu?     @relation(fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  orders         orders?   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                  String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  order_id            String?   @db.Uuid
+  item_id             String?   @db.Uuid
+  order_quantity      Int?
+  created_at          DateTime? @db.Timestamptz(6)
+  updated_at          DateTime? @db.Timestamptz(6)
+  vendor_fulfilled_at DateTime? @db.Timestamptz(6)
+  menu                menu?     @relation(fields: [item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  orders              orders?   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model vendors {
+  id            String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  location_id   String?    @db.Uuid
+  name          String     @db.VarChar
+  hours         String?    @db.VarChar
+  description   String?    @db.VarChar
+  momo_number   String?    @db.VarChar
+  created_at    DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime   @updatedAt @db.Timestamptz(6)
+  thumbnail_url String?    @db.VarChar(255)
+  menu          menu[]
+  users         users[]    @relation("VendorUsers")
+  locations     locations? @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+enum menu_category {
+  food
+  drinks
+  snacks
+  desserts
+  stationery
+  electronics
 }
 
 enum trip_status {
@@ -131,6 +182,7 @@ enum order_status {
   started
   completed
   failed
+  pending
 }
 
 enum command_status {

@@ -6,6 +6,7 @@ export const CreateMenuPayload = {
         unit_cost: z.number(),
         description: z.string().optional(),
         thumbnail: z.string().optional(),
+        vendor_id: z.string().uuid().optional(),
     }),
 }
 

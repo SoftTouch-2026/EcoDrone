@@ -54,6 +54,1523 @@
   },
   "security": [],
   "paths": {
+    "/admin/environmental/current-readings": {
+      "get": {
+        "tags": [
+          "Admin Environmental"
+        ],
+        "summary": "Current environmental readings",
+        "description": "Latest sensor readings by drone (stubbed until sensors integrated)",
+        "operationId": "handleCurrentReadings",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "drone_id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional drone ID to filter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current readings retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "readings_by_drone": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "drone_id": {
+                                "type": "string"
+                              },
+                              "timestamp": {
+                                "type": "string"
+                              },
+                              "temperature_c": {
+                                "type": "number"
+                              },
+                              "humidity_percent": {
+                                "type": "number"
+                              },
+                              "pm25_ug_m3": {
+                                "type": "number"
+                              },
+                              "co2_ppm": {
+                                "type": "number"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/admin/environmental/flight-logs": {
+      "get": {
+        "tags": [
+          "Admin Environmental"
+        ],
+        "summary": "Flight logs",
+        "description": "Environmental data per flight (stubbed; derived from trips where available)",
+        "operationId": "handleFlightLogs",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "drone_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Flight logs retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "flight_id": {
+                                "type": "string"
+                              },
+                              "drone_id": {
+                                "type": "string"
+                              },
+                              "started_at": {
+                                "type": "string"
+                              },
+                              "ended_at": {
+                                "type": "string"
+                              },
+                              "avg_temperature_c": {
+                                "type": "number"
+                              },
+                              "avg_humidity_percent": {
+                                "type": "number"
+                              },
+                              "avg_pm25_ug_m3": {
+                                "type": "number"
+                              },
+                              "avg_co2_ppm": {
+                                "type": "number"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/admin/environmental/time-series": {
+      "get": {
+        "tags": [
+          "Admin Environmental"
+        ],
+        "summary": "Environmental time-series",
+        "description": "Aggregated sensor data over time (stubbed until sensors integrated)",
+        "operationId": "handleTimeSeries",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "metric",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "temperature_c",
+                "humidity_percent",
+                "pm25_ug_m3",
+                "co2_ppm"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "drone_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "interval",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "hour",
+                "day"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Time-series data retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "metric": {
+                          "type": "string"
+                        },
+                        "interval": {
+                          "type": "string"
+                        },
+                        "points": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "timestamp": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "number"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/admin/reports/dashboard-summary": {
+      "get": {
+        "tags": [
+          "Admin Reports"
+        ],
+        "summary": "Dashboard summary",
+        "description": "High-level metrics for dashboard cards and today's chart",
+        "operationId": "handleDashboardSummary",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard summary retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "active_deliveries_count": {
+                          "type": "integer"
+                        },
+                        "drones_operational_count": {
+                          "type": "integer"
+                        },
+                        "drones_total_count": {
+                          "type": "integer"
+                        },
+                        "orders_today_count": {
+                          "type": "integer"
+                        },
+                        "avg_delivery_time_minutes": {
+                          "type": "number"
+                        },
+                        "hourly_orders_today": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "hour": {
+                                "type": "string"
+                              },
+                              "orders": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/admin/reports/activity": {
+      "get": {
+        "tags": [
+          "Admin Reports"
+        ],
+        "summary": "Recent activity",
+        "description": "Chronological list of recent activity for the activity panel",
+        "operationId": "handleActivity",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Max number of items (default 20)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Activity retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "time": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/admin/reports/vendor-performance": {
+      "get": {
+        "tags": [
+          "Admin Reports"
+        ],
+        "summary": "Vendor performance",
+        "description": "Aggregated vendor metrics over a date range",
+        "operationId": "handleVendorPerformance",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "period",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "this_week",
+                "this_month"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vendor performance retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "vendor_id": {
+                            "type": "string"
+                          },
+                          "vendor_name": {
+                            "type": "string"
+                          },
+                          "orders_count": {
+                            "type": "integer"
+                          },
+                          "items_delivered_count": {
+                            "type": "integer"
+                          },
+                          "revenue": {
+                            "type": "number"
+                          },
+                          "avg_delivery_time_minutes": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/admin/reports/drone-performance": {
+      "get": {
+        "tags": [
+          "Admin Reports"
+        ],
+        "summary": "Drone performance",
+        "description": "Aggregated drone/flight metrics over a date range",
+        "operationId": "handleDronePerformance",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "period",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "this_week",
+                "this_month"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Drone performance retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "drone_id": {
+                            "type": "string"
+                          },
+                          "drone_name": {
+                            "type": "string"
+                          },
+                          "flights_count": {
+                            "type": "integer"
+                          },
+                          "flight_time_hours": {
+                            "type": "number"
+                          },
+                          "avg_battery_at_landing_percent": {
+                            "type": "number"
+                          },
+                          "groundings_count": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/admin/reports/delivery-locations": {
+      "get": {
+        "tags": [
+          "Admin Reports"
+        ],
+        "summary": "Delivery locations report",
+        "description": "Orders count and percentage per dropoff location",
+        "operationId": "handleDeliveryLocations",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "period",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "this_week",
+                "this_month"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delivery locations retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "location_id": {
+                            "type": "string"
+                          },
+                          "location_name": {
+                            "type": "string"
+                          },
+                          "orders_count": {
+                            "type": "integer"
+                          },
+                          "percentage": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/admin/reports/user-activity": {
+      "get": {
+        "tags": [
+          "Admin Reports"
+        ],
+        "summary": "User activity",
+        "description": "List of user events (e.g. orders placed) for Reports tab",
+        "operationId": "handleUserActivity",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User activity retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "time": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              },
+                              "user_id": {
+                                "type": "string"
+                              },
+                              "user_email": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/admin/reports/hourly-orders": {
+      "get": {
+        "tags": [
+          "Admin Reports"
+        ],
+        "summary": "Hourly orders",
+        "description": "Orders count per hour for chart (optional; dashboard-summary includes today)",
+        "operationId": "handleHourlyOrders",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hourly orders retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "hour": {
+                            "type": "string"
+                          },
+                          "orders": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/admin/users": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Create user (admin only)",
+        "description": "Create a new user. Admin-created accounts have should_reset_password set to true.",
+        "operationId": "handleCreateAdminUserRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "first_name",
+                  "last_name",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "first_name": {
+                    "type": "string"
+                  },
+                  "last_name": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "user",
+                      "admin"
+                    ],
+                    "default": "user"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User created successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "first_name": {
+                          "type": "string"
+                        },
+                        "last_name": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "should_reset_password": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden (admin required)"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List users (admin only)",
+        "description": "Get paginated list of users with optional type filter",
+        "operationId": "handleListAdminUsersRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "string",
+              "default": "1"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "string",
+              "default": "10"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "user",
+                "admin"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Users retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Users retrieved successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "email": {
+                                "type": "string"
+                              },
+                              "first_name": {
+                                "type": "string"
+                              },
+                              "last_name": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              },
+                              "should_reset_password": {
+                                "type": "boolean"
+                              }
+                            }
+                          }
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden (admin required)"
+          }
+        }
+      }
+    },
+    "/admin/users/{id}": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get user by ID (admin only)",
+        "description": "Retrieve a single user by ID",
+        "operationId": "handleGetAdminUserRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User retrieved successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "first_name": {
+                          "type": "string"
+                        },
+                        "last_name": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "should_reset_password": {
+                          "type": "boolean"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updated_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden (admin required)"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update user (admin only)",
+        "description": "Update a user by ID. All body fields are optional.",
+        "operationId": "handleUpdateAdminUserRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "first_name": {
+                    "type": "string"
+                  },
+                  "last_name": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "user",
+                      "admin"
+                    ]
+                  },
+                  "should_reset_password": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User updated successfully"
+                    },
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden (admin required)"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Delete user (admin only)",
+        "description": "Delete a user by ID. Admins cannot delete their own account.",
+        "operationId": "handleDeleteAdminUserRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User deleted successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "first_name": {
+                          "type": "string"
+                        },
+                        "last_name": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden (admin required or cannot delete self)"
+          }
+        }
+      }
+    },
+    "/admin/audit-logs": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List audit logs",
+        "description": "Paginated list of audit log entries with optional filters (admin only)",
+        "operationId": "handleListAuditLogsRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "string",
+              "default": "1"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "string",
+              "default": "20"
+            }
+          },
+          {
+            "in": "query",
+            "name": "action",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by action (e.g. auth.sign_in, drone.create)"
+          },
+          {
+            "in": "query",
+            "name": "resource_type",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by resource type (user, order, drone, vendor, trip)"
+          },
+          {
+            "in": "query",
+            "name": "actor_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by actor user ID"
+          },
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string"
+            },
+            "description": "ISO date filter from"
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string"
+            },
+            "description": "ISO date filter to"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit logs retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "action": {
+                            "type": "string"
+                          },
+                          "actor_id": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "resource_type": {
+                            "type": "string"
+                          },
+                          "resource_id": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "message": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "metadata": {
+                            "type": "object",
+                            "nullable": true
+                          },
+                          "success": {
+                            "type": "boolean"
+                          },
+                          "ip": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "user_agent": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
     "/auth/signUp": {
       "post": {
         "tags": [
@@ -61,6 +1578,7 @@
         ],
         "summary": "Register a new user",
         "description": "Create a new user account with email and password",
+        "operationId": "handleSignUpRequest",
         "requestBody": {
           "required": true,
           "content": {
@@ -100,6 +1618,12 @@
                       "admin"
                     ],
                     "example": "user"
+                  },
+                  "vendor_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true,
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   }
                 }
               }
@@ -107,7 +1631,7 @@
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "User created successfully",
             "content": {
               "application/json": {
@@ -139,10 +1663,28 @@
                             },
                             "last_name": {
                               "type": "string"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "user",
+                                "admin"
+                              ]
+                            },
+                            "should_reset_password": {
+                              "type": "boolean"
+                            },
+                            "vendor_id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "nullable": true
                             }
                           }
                         },
-                        "token": {
+                        "accessToken": {
+                          "type": "string"
+                        },
+                        "refreshToken": {
                           "type": "string"
                         }
                       }
@@ -172,6 +1714,7 @@
         ],
         "summary": "Sign in to user account",
         "description": "Authenticate user and receive JWT access and refresh tokens",
+        "operationId": "handleSignInRequest",
         "requestBody": {
           "required": true,
           "content": {
@@ -218,7 +1761,31 @@
                       "type": "object",
                       "properties": {
                         "user": {
-                          "type": "object"
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "first_name": {
+                              "type": "string"
+                            },
+                            "last_name": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "user",
+                                "admin"
+                              ]
+                            },
+                            "should_reset_password": {
+                              "type": "boolean"
+                            }
+                          }
                         },
                         "accessToken": {
                           "type": "string"
@@ -246,6 +1813,133 @@
         }
       }
     },
+    "/auth/refresh": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Refresh access token",
+        "description": "Exchange a valid refresh token for new access and refresh tokens",
+        "operationId": "handleRefreshRequest",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "refreshToken"
+                ],
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "description": "Valid refresh token from sign-in"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens refreshed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Token refreshed successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "accessToken": {
+                          "type": "string"
+                        },
+                        "refreshToken": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/resetPassword": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Reset password",
+        "description": "Set new password and clear should_reset_password (requires authentication)",
+        "operationId": "handleResetPasswordRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "newPassword"
+                ],
+                "properties": {
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 6
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/auth/editUser": {
       "post": {
         "tags": [
@@ -253,6 +1947,7 @@
         ],
         "summary": "Update user profile",
         "description": "Update user account information (requires authentication)",
+        "operationId": "handleEditUserRequest",
         "security": [
           {
             "bearerAuth": []
@@ -329,6 +2024,7 @@
         ],
         "summary": "Delete user account",
         "description": "Permanently delete a user account (requires authentication)",
+        "operationId": "handleDeleteUserRequest",
         "security": [
           {
             "bearerAuth": []
@@ -380,6 +2076,7 @@
         ],
         "summary": "Create a new cart",
         "description": "Create a shopping cart for a user",
+        "operationId": "handleCreateCartRequest",
         "security": [
           {
             "bearerAuth": []
@@ -417,13 +2114,14 @@
         }
       }
     },
-    "/cart/deleteCart": {
+    "/cart/deleteCart/{id}": {
       "delete": {
         "tags": [
           "Cart"
         ],
         "summary": "Delete a cart",
         "description": "Remove a cart and all its items",
+        "operationId": "handleDeleteCartRequest",
         "security": [
           {
             "bearerAuth": []
@@ -431,7 +2129,7 @@
         ],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "id",
             "required": true,
             "schema": {
@@ -453,13 +2151,14 @@
         }
       }
     },
-    "/cart/getCart": {
+    "/cart/getCart/{id}": {
       "get": {
         "tags": [
           "Cart"
         ],
         "summary": "Get cart by ID",
         "description": "Retrieve cart details including all items",
+        "operationId": "handleGetCartRequest",
         "security": [
           {
             "bearerAuth": []
@@ -467,7 +2166,7 @@
         ],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "id",
             "required": true,
             "schema": {
@@ -489,13 +2188,14 @@
         }
       }
     },
-    "/cart/getCartByUser": {
+    "/cart/getCartByUser/{userId}": {
       "get": {
         "tags": [
           "Cart"
         ],
         "summary": "Get cart by user ID",
         "description": "Retrieve a user's cart with all items",
+        "operationId": "handleGetCartByUserRequest",
         "security": [
           {
             "bearerAuth": []
@@ -503,8 +2203,8 @@
         ],
         "parameters": [
           {
-            "in": "query",
-            "name": "user_id",
+            "in": "path",
+            "name": "userId",
             "required": true,
             "schema": {
               "type": "string"
@@ -532,6 +2232,7 @@
         ],
         "summary": "Add item to cart",
         "description": "Add a menu item to the shopping cart with quantity",
+        "operationId": "handleAddCartItemRequest",
         "security": [
           {
             "bearerAuth": []
@@ -587,6 +2288,7 @@
         ],
         "summary": "Update cart item quantity",
         "description": "Update the quantity of an item in the cart",
+        "operationId": "handleUpdateCartItemRequest",
         "security": [
           {
             "bearerAuth": []
@@ -628,13 +2330,14 @@
         }
       }
     },
-    "/cartItem/deleteCartItem": {
+    "/cartItem/deleteCartItem/{id}": {
       "delete": {
         "tags": [
           "Cart Items"
         ],
         "summary": "Remove item from cart",
         "description": "Delete a specific item from the cart",
+        "operationId": "handleDeleteCartItemRequest",
         "security": [
           {
             "bearerAuth": []
@@ -642,7 +2345,7 @@
         ],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "id",
             "required": true,
             "schema": {
@@ -671,6 +2374,7 @@
         ],
         "summary": "Get all items in cart",
         "description": "Retrieve all items in a specific cart",
+        "operationId": "handleGetCartItemsRequest",
         "security": [
           {
             "bearerAuth": []
@@ -707,6 +2411,7 @@
         ],
         "summary": "Create a new drone",
         "description": "Register a new drone in the system with serial number and battery level",
+        "operationId": "handleCreateDroneRequest",
         "security": [
           {
             "bearerAuth": []
@@ -786,6 +2491,7 @@
         ],
         "summary": "Update drone battery level",
         "description": "Update the battery level of an existing drone",
+        "operationId": "handleUpdateDroneRequest",
         "security": [
           {
             "bearerAuth": []
@@ -830,13 +2536,14 @@
         }
       }
     },
-    "/drones/deleteDrone": {
+    "/drones/deleteDrone/{id}": {
       "delete": {
         "tags": [
           "Drones"
         ],
         "summary": "Delete a drone",
         "description": "Remove a drone from the system",
+        "operationId": "handleDeleteDroneRequest",
         "security": [
           {
             "bearerAuth": []
@@ -844,7 +2551,7 @@
         ],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "id",
             "required": true,
             "schema": {
@@ -873,6 +2580,7 @@
         ],
         "summary": "Assign drone to order",
         "description": "Assign an available drone to a specific order",
+        "operationId": "handleAssignDroneRequest",
         "security": [
           {
             "bearerAuth": []
@@ -915,13 +2623,14 @@
         }
       }
     },
-    "/drones/getDrone": {
+    "/drones/getDrone/{id}": {
       "get": {
         "tags": [
           "Drones"
         ],
         "summary": "Get single drone",
         "description": "Retrieve details of a specific drone by ID",
+        "operationId": "handleGetDroneRequest",
         "security": [
           {
             "bearerAuth": []
@@ -929,7 +2638,7 @@
         ],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "id",
             "required": true,
             "schema": {
@@ -979,6 +2688,7 @@
         ],
         "summary": "Get paginated list of drones",
         "description": "Retrieve a paginated list of all drones in the system",
+        "operationId": "handleGetDronesRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1050,6 +2760,7 @@
         ],
         "summary": "Create a new location",
         "description": "Add a new delivery location with coordinates",
+        "operationId": "handleCreateLocationRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1104,6 +2815,7 @@
         ],
         "summary": "Update location details",
         "description": "Update coordinates and name of an existing location",
+        "operationId": "handleUpdateLocationRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1152,13 +2864,14 @@
         }
       }
     },
-    "/locations/deleteLocation": {
+    "/locations/deleteLocation/{id}": {
       "delete": {
         "tags": [
           "Locations"
         ],
         "summary": "Delete a location",
         "description": "Remove a location from the system",
+        "operationId": "handleDeleteLocationRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1166,7 +2879,7 @@
         ],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "id",
             "required": true,
             "schema": {
@@ -1188,13 +2901,14 @@
         }
       }
     },
-    "/locations/getLocation": {
+    "/locations/getLocation/{id}": {
       "get": {
         "tags": [
           "Locations"
         ],
         "summary": "Get single location",
         "description": "Retrieve details of a specific location by ID",
+        "operationId": "handleGetLocationRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1202,7 +2916,7 @@
         ],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "id",
             "required": true,
             "schema": {
@@ -1252,6 +2966,7 @@
         ],
         "summary": "Get paginated list of locations",
         "description": "Retrieve a paginated list of all locations",
+        "operationId": "handleGetLocationsRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1321,6 +3036,7 @@
         ],
         "summary": "Create a new menu item",
         "description": "Add a new item to the menu with name, price, and optional description",
+        "operationId": "handleCreateMenuRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1378,6 +3094,7 @@
         ],
         "summary": "Update menu item",
         "description": "Update details of an existing menu item",
+        "operationId": "handleUpdateMenuRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1428,13 +3145,14 @@
         }
       }
     },
-    "/menu/deleteMenu": {
+    "/menu/deleteMenu/{id}": {
       "delete": {
         "tags": [
           "Menu"
         ],
         "summary": "Delete menu item",
         "description": "Remove a menu item from the system",
+        "operationId": "handleDeleteMenuRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1442,7 +3160,7 @@
         ],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "id",
             "required": true,
             "schema": {
@@ -1464,13 +3182,14 @@
         }
       }
     },
-    "/menu/getMenu": {
+    "/menu/getMenu/{id}": {
       "get": {
         "tags": [
           "Menu"
         ],
         "summary": "Get single menu item",
         "description": "Retrieve details of a specific menu item",
+        "operationId": "handleGetMenuRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1478,7 +3197,7 @@
         ],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "id",
             "required": true,
             "schema": {
@@ -1507,6 +3226,7 @@
         ],
         "summary": "Get paginated list of menu items",
         "description": "Retrieve all menu items with pagination",
+        "operationId": "handleGetMenusRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1552,6 +3272,7 @@
         ],
         "summary": "Create order item",
         "description": "Add an item to an order with quantity",
+        "operationId": "handleCreateOrderItemRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1607,6 +3328,7 @@
         ],
         "summary": "Update order item quantity",
         "description": "Update the quantity of an item in an order",
+        "operationId": "handleUpdateOrderItemRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1648,13 +3370,14 @@
         }
       }
     },
-    "/orderItem/deleteOrderItem": {
+    "/orderItem/deleteOrderItem/{id}": {
       "delete": {
         "tags": [
           "Order Items"
         ],
         "summary": "Delete order item",
         "description": "Remove an item from an order",
+        "operationId": "handleDeleteOrderItemRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1662,7 +3385,7 @@
         ],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "id",
             "required": true,
             "schema": {
@@ -1691,6 +3414,7 @@
         ],
         "summary": "Get all items in order",
         "description": "Retrieve all items in a specific order",
+        "operationId": "handleGetOrderItemsRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1727,6 +3451,7 @@
         ],
         "summary": "Create a new order",
         "description": "Create a delivery order with pickup and dropoff locations",
+        "operationId": "handleCreateOrderRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1786,6 +3511,7 @@
         ],
         "summary": "Update order details",
         "description": "Update pickup/dropoff locations and assigned drone for an order",
+        "operationId": "handleUpdateOrderRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1834,13 +3560,14 @@
         }
       }
     },
-    "/orders/deleteOrder": {
+    "/orders/deleteOrder/{id}": {
       "delete": {
         "tags": [
           "Orders"
         ],
         "summary": "Delete an order",
         "description": "Remove an order from the system",
+        "operationId": "handleDeleteOrderRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1848,7 +3575,7 @@
         ],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "id",
             "required": true,
             "schema": {
@@ -1870,13 +3597,14 @@
         }
       }
     },
-    "/orders/getOrder": {
+    "/orders/getOrder/{id}": {
       "get": {
         "tags": [
           "Orders"
         ],
         "summary": "Get single order",
         "description": "Retrieve details of a specific order by ID",
+        "operationId": "handleGetOrderRequest",
         "security": [
           {
             "bearerAuth": []
@@ -1884,7 +3612,7 @@
         ],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "id",
             "required": true,
             "schema": {
@@ -1940,12 +3668,22 @@
         ],
         "summary": "Get paginated list of orders",
         "description": "Retrieve a paginated list of all orders",
+        "operationId": "handleGetOrdersRequest",
         "security": [
           {
             "bearerAuth": []
           }
         ],
         "parameters": [
+          {
+            "in": "query",
+            "name": "user_id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "770e8400-e29b-41d4-a716-446655440002"
+          },
           {
             "in": "query",
             "name": "page",
@@ -2012,6 +3750,7 @@
         ],
         "summary": "Create a new trip",
         "description": "Create a delivery trip for an order",
+        "operationId": "handleCreateTripRequest",
         "security": [
           {
             "bearerAuth": []
@@ -2067,6 +3806,7 @@
         ],
         "summary": "Update trip status",
         "description": "Update the status of an existing trip",
+        "operationId": "handleUpdateTripRequest",
         "security": [
           {
             "bearerAuth": []
@@ -2113,13 +3853,14 @@
         }
       }
     },
-    "/trips/deleteTrip": {
+    "/trips/deleteTrip/{id}": {
       "delete": {
         "tags": [
           "Trips"
         ],
         "summary": "Delete a trip",
         "description": "Remove a trip from the system",
+        "operationId": "handleDeleteTripRequest",
         "security": [
           {
             "bearerAuth": []
@@ -2127,7 +3868,7 @@
         ],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "id",
             "required": true,
             "schema": {
@@ -2149,13 +3890,14 @@
         }
       }
     },
-    "/trips/getTrip": {
+    "/trips/getTrip/{id}": {
       "get": {
         "tags": [
           "Trips"
         ],
         "summary": "Get single trip",
         "description": "Retrieve details of a specific trip by ID",
+        "operationId": "handleGetTripRequest",
         "security": [
           {
             "bearerAuth": []
@@ -2163,7 +3905,7 @@
         ],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "id",
             "required": true,
             "schema": {
@@ -2218,6 +3960,7 @@
         ],
         "summary": "Get paginated list of trips",
         "description": "Retrieve a paginated list of all trips",
+        "operationId": "handleGetTripsRequest",
         "security": [
           {
             "bearerAuth": []
@@ -2292,6 +4035,7 @@
         ],
         "summary": "Start a trip",
         "description": "Mark a trip as ongoing and record the start time",
+        "operationId": "handleStartTripRequest",
         "security": [
           {
             "bearerAuth": []
@@ -2356,6 +4100,7 @@
         ],
         "summary": "End a trip",
         "description": "Mark a trip as completed and record the end time",
+        "operationId": "handleEndTripRequest",
         "security": [
           {
             "bearerAuth": []
@@ -2398,6 +4143,1122 @@
                     "end_time": {
                       "type": "string",
                       "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/vendor/me": {
+      "get": {
+        "tags": [
+          "Vendor"
+        ],
+        "summary": "Get current vendor profile",
+        "description": "Returns the vendor associated with the authenticated user (vendor account required).",
+        "operationId": "handleGetVendorMeRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vendor profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "location_id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "hours": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "momo_number": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "locations": {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Vendor account required"
+          },
+          "404": {
+            "description": "Vendor not found"
+          }
+        }
+      }
+    },
+    "/vendor/me/menu": {
+      "get": {
+        "tags": [
+          "Vendor"
+        ],
+        "summary": "Get current vendor menu",
+        "description": "Returns all menu items for the current vendor.",
+        "operationId": "handleGetVendorMeMenuRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of menu items"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Vendor account required"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Vendor"
+        ],
+        "summary": "Create a menu item for current vendor",
+        "description": "Creates a new menu item owned by the current vendor.",
+        "operationId": "handleCreateVendorMeMenuRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "unit_cost"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "unit_cost": {
+                    "type": "number"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "thumbnail": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Menu item created"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Vendor account required"
+          }
+        }
+      }
+    },
+    "/vendor/me/menu/{id}": {
+      "patch": {
+        "tags": [
+          "Vendor"
+        ],
+        "summary": "Update a menu item for current vendor",
+        "description": "Updates an existing menu item that belongs to the current vendor.",
+        "operationId": "handleUpdateVendorMeMenuRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "unit_cost": {
+                    "type": "number"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "thumbnail": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Menu item updated"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Vendor account required"
+          },
+          "404": {
+            "description": "Menu item not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Vendor"
+        ],
+        "summary": "Delete a menu item for current vendor",
+        "description": "Deletes an existing menu item that belongs to the current vendor.",
+        "operationId": "handleDeleteVendorMeMenuRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Menu item deleted"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Vendor account required"
+          },
+          "404": {
+            "description": "Menu item not found"
+          }
+        }
+      }
+    },
+    "/vendor/me/orders": {
+      "get": {
+        "tags": [
+          "Vendor"
+        ],
+        "summary": "List orders for current vendor",
+        "description": "Returns a paginated list of orders that contain at least one order item belonging to the current vendor. Each order only includes this vendor's items in its order_item array.",
+        "operationId": "handleGetVendorMeOrdersRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of vendor orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "pickup_location": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "name": {
+                                "type": "string",
+                                "nullable": true
+                              }
+                            }
+                          },
+                          "dropoff_location": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "name": {
+                                "type": "string",
+                                "nullable": true
+                              }
+                            }
+                          },
+                          "customer": {
+                            "type": "object",
+                            "nullable": true,
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "email": {
+                                "type": "string"
+                              },
+                              "first_name": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "last_name": {
+                                "type": "string",
+                                "nullable": true
+                              }
+                            }
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updated_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "order_item": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "order_id": {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "nullable": true
+                                },
+                                "item_id": {
+                                  "type": "string",
+                                  "format": "uuid",
+                                  "nullable": true
+                                },
+                                "order_quantity": {
+                                  "type": "integer",
+                                  "nullable": true
+                                },
+                                "vendor_fulfilled_at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "nullable": true
+                                },
+                                "menu": {
+                                  "type": "object",
+                                  "nullable": true,
+                                  "properties": {
+                                    "id": {
+                                      "type": "string",
+                                      "format": "uuid"
+                                    },
+                                    "name": {
+                                      "type": "string",
+                                      "nullable": true
+                                    },
+                                    "unit_cost": {
+                                      "type": "number"
+                                    },
+                                    "thumbnail_url": {
+                                      "type": "string",
+                                      "nullable": true
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Vendor account required"
+          }
+        }
+      }
+    },
+    "/vendor/me/orders/{orderId}/fulfill": {
+      "post": {
+        "tags": [
+          "Vendor"
+        ],
+        "summary": "Mark all items for this vendor in an order as fulfilled",
+        "description": "Sets vendor_fulfilled_at for all order items in the order that belong to the current vendor.",
+        "operationId": "handleFulfillVendorMeOrderRequestPost",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order items for this vendor marked fulfilled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "pickup_location": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "dropoff_location": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "assigned_drone": {
+                      "type": "string",
+                      "format": "uuid",
+                      "nullable": true
+                    },
+                    "customer_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Vendor account required or no items for this vendor"
+          },
+          "404": {
+            "description": "Order not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Vendor"
+        ],
+        "summary": "Mark all items for this vendor in an order as fulfilled (alias)",
+        "description": "Same as POST /vendor/me/orders/{orderId}/fulfill.",
+        "operationId": "handleFulfillVendorMeOrderRequestPatch",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order items for this vendor marked fulfilled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "pickup_location": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "dropoff_location": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "assigned_drone": {
+                      "type": "string",
+                      "format": "uuid",
+                      "nullable": true
+                    },
+                    "customer_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Vendor account required or no items for this vendor"
+          },
+          "404": {
+            "description": "Order not found"
+          }
+        }
+      }
+    },
+    "/vendor/me/orders/{orderId}/items/{orderItemId}/fulfill": {
+      "patch": {
+        "tags": [
+          "Vendor"
+        ],
+        "summary": "Mark a single order item for this vendor as fulfilled",
+        "description": "Sets vendor_fulfilled_at for one order_item that belongs to the given order and to the current vendor.",
+        "operationId": "handleFulfillVendorMeOrderItemRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "orderItemId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order item marked fulfilled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "order_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "nullable": true
+                    },
+                    "item_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "nullable": true
+                    },
+                    "order_quantity": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "vendor_fulfilled_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "menu": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "unit_cost": {
+                          "type": "number"
+                        },
+                        "thumbnail_url": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Vendor account required or item does not belong to vendor"
+          },
+          "404": {
+            "description": "Order item not found"
+          }
+        }
+      }
+    },
+    "/vendors/createVendor": {
+      "post": {
+        "tags": [
+          "Vendors"
+        ],
+        "summary": "Create a new vendor",
+        "description": "Add a new cafeteria or shop vendor to the system",
+        "operationId": "handleCreateVendorRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Akornor Cafeteria"
+                  },
+                  "location_id": {
+                    "type": "string",
+                    "example": "hive-location"
+                  },
+                  "hours": {
+                    "type": "string",
+                    "example": "7:00 AM – 8:00 PM"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Main campus dining — Jollof, Banku, local favorites"
+                  },
+                  "emoji": {
+                    "type": "string",
+                    "example": "🍛"
+                  },
+                  "momo_number": {
+                    "type": "string",
+                    "example": "024 123 4567"
+                  },
+                  "thumbnail_url": {
+                    "type": "string",
+                    "nullable": true,
+                    "example": "https://example.com/vendors/akornor.jpg"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Vendor created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/vendors/updateVendor": {
+      "post": {
+        "tags": [
+          "Vendors"
+        ],
+        "summary": "Update vendor details",
+        "description": "Update information for an existing vendor",
+        "operationId": "handleUpdateVendorRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "id"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "location_id": {
+                    "type": "string"
+                  },
+                  "hours": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "emoji": {
+                    "type": "string"
+                  },
+                  "momo_number": {
+                    "type": "string"
+                  },
+                  "thumbnail_url": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Vendor updated successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/vendors/deleteVendor/{id}": {
+      "delete": {
+        "tags": [
+          "Vendors"
+        ],
+        "summary": "Delete a vendor",
+        "description": "Remove a vendor from the system",
+        "operationId": "handleDeleteVendorRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Vendor ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vendor deleted successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/vendors/getVendor/{id}": {
+      "get": {
+        "tags": [
+          "Vendors"
+        ],
+        "summary": "Get single vendor",
+        "description": "Retrieve details of a specific vendor by ID",
+        "operationId": "handleGetVendorRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Vendor ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vendor details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "location_id": {
+                      "type": "string"
+                    },
+                    "hours": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "emoji": {
+                      "type": "string"
+                    },
+                    "momo_number": {
+                      "type": "string"
+                    },
+                    "thumbnail_url": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "locations": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/vendors/getVendors": {
+      "get": {
+        "tags": [
+          "Vendors"
+        ],
+        "summary": "Get paginated list of vendors",
+        "description": "Retrieve a paginated list of all vendors",
+        "operationId": "handleGetVendorsRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "pathf",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Vendor ID"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "1"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "10"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of vendors retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "location_id": {
+                        "type": "string"
+                      },
+                      "hours": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "emoji": {
+                        "type": "string"
+                      },
+                      "momo_number": {
+                        "type": "string"
+                      },
+                      "thumbnail_url": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/vendors/getVendorMenu/{vendorId}": {
+      "get": {
+        "tags": [
+          "Vendors"
+        ],
+        "summary": "Get vendor menu items",
+        "description": "Retrieve all available menu items for a specific vendor",
+        "operationId": "handleGetVendorMenuRequest",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vendorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Vendor ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Menu items retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "vendor_id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string",
+                        "enum": [
+                          "food",
+                          "drinks",
+                          "snacks",
+                          "desserts",
+                          "stationery",
+                          "electronics"
+                        ]
+                      },
+                      "unit_cost": {
+                        "type": "number"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "thumbnail_url": {
+                        "type": "string"
+                      },
+                      "available": {
+                        "type": "boolean"
+                      }
                     }
                   }
                 }

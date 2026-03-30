@@ -1,5 +1,6 @@
 import { Express } from 'express'
 import { authRoutes } from './auth'
+import { adminRoutes } from './admin'
 import { droneRoutes } from './drones'
 import { locationRoutes } from './locations'
 import { orderRoutes } from './orders'
@@ -9,10 +10,14 @@ import { cartRoutes } from './cart'
 import { cartItemRoutes } from './cartItem'
 import { orderItemRoutes } from './orderItem'
 import { groundStationRoutes } from './groundStation'
+import { vendorRoutes } from './vendors'
+import { vendorMeRoutes } from './vendor'
 //main routes file
 
 export const router = (app: Express) => {
     app.use('/auth', authRoutes())
+    app.use('/admin', adminRoutes())
+    app.use('/vendor', vendorMeRoutes())
     app.use('/drones', droneRoutes())
     app.use('/locations', locationRoutes())
     app.use('/orders', orderRoutes())
@@ -22,4 +27,5 @@ export const router = (app: Express) => {
     app.use('/cartItem', cartItemRoutes())
     app.use('/orderItem', orderItemRoutes())
     app.use('/ground-station', groundStationRoutes())
+    app.use('/vendors', vendorRoutes())
 }

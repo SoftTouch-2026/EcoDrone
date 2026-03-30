@@ -12,8 +12,8 @@ export const addCartItemService = async (data: AddCartItemInput['body']) => {
         const cartItem = await prisma.cart_item.create({
             data: {
                 cart_id,
-                item_id,
-                quanity: quantity,
+                item_id: item_id,
+                quantity: quantity,
             },
         })
         return cartItem
@@ -32,7 +32,7 @@ export const updateCartItemService = async (
                 id,
             },
             data: {
-                quanity: quantity,
+                quantity: quantity,
             },
         })
         return cartItem
@@ -67,6 +67,7 @@ export const getCartItemsService = async (
                 cart_id,
             },
             include: {
+                cart: true,
                 menu: true,
             },
         })

@@ -25,6 +25,7 @@ export const cartItemRoutes = () => {
      *       - Cart Items
      *     summary: Add item to cart
      *     description: Add a menu item to the shopping cart with quantity
+     *     operationId: handleAddCartItemRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -70,6 +71,7 @@ export const cartItemRoutes = () => {
      *       - Cart Items
      *     summary: Update cart item quantity
      *     description: Update the quantity of an item in the cart
+     *     operationId: handleUpdateCartItemRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -103,16 +105,17 @@ export const cartItemRoutes = () => {
 
     /**
      * @openapi
-     * /cartItem/deleteCartItem:
+     * /cartItem/deleteCartItem/{id}:
      *   delete:
      *     tags:
      *       - Cart Items
      *     summary: Remove item from cart
      *     description: Delete a specific item from the cart
+     *     operationId: handleDeleteCartItemRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
+     *       - in: path
      *         name: id
      *         required: true
      *         schema:
@@ -126,7 +129,7 @@ export const cartItemRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.delete('/deleteCartItem', [
+    router.delete('/deleteCartItem/:id', [
         requireUser,
         validateResource(DeleteCartItemSchema),
         handleDeleteCartItemRequest,
@@ -140,6 +143,7 @@ export const cartItemRoutes = () => {
      *       - Cart Items
      *     summary: Get all items in cart
      *     description: Retrieve all items in a specific cart
+     *     operationId: handleGetCartItemsRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:

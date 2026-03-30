@@ -20,7 +20,7 @@ export const GetCartParams = {
 
 export const GetCartByUserParams = {
     params: z.object({
-        user_id: z.string().min(1),
+        userId: z.string().min(1),
     }),
 }
 

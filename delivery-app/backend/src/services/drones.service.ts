@@ -10,6 +10,37 @@ import {
 import { DRONE_BATTERY_THRESHOLD } from '../utils/constants'
 import { Decimal } from '@prisma/client/runtime/client'
 
+const droneStatusMap: Record<string, string> = {
+    available: 'Idle',
+    pending: 'Assigned',
+}
+
+function mapDroneToSpec(drone: {
+    id: string
+    serial_number: string | null
+    battery_level: Decimal | null
+    status: string | null
+    created_at: Date
+    updated_at: Date
+}, current_order_id?: string | null) {
+    const battery = drone.battery_level != null ? Number(drone.battery_level) : null
+    return {
+        id: drone.id,
+        serial_number: drone.serial_number ?? '',
+        name: drone.serial_number ? `Drone ${drone.serial_number}` : 'Drone',
+        battery_level: battery ?? 0,
+        status: droneStatusMap[drone.status ?? ''] ?? 'Idle',
+        current_order_id: current_order_id ?? null,
+        latitude: null as number | null,
+        longitude: null as number | null,
+        total_flights: 0,
+        last_active_at: null as string | null,
+        speed_kmh: null as number | null,
+        created_at: drone.created_at,
+        updated_at: drone.updated_at,
+    }
+}
+
 export const createDroneService = async (data: CreateDroneInput['body']) => {
     try {
         const { serial_number, battery_level } = data
@@ -60,24 +91,45 @@ export const getDroneService = async (data: GetDroneInput['params']) => {
     try {
         const { id } = data
         const drone = await prisma.drones.findUnique({
-            where: {
-                id,
-            },
+            where: { id },
         })
-        return drone
+        if (!drone) return null
+        const order = await prisma.orders.findFirst({
+            where: { assigned_drone: id },
+            select: { id: true },
+        })
+        return mapDroneToSpec(drone, order?.id)
     } catch (e) {
         throw e
     }
 }
 
-export const getDronesService = async (data: GetDronesInput['params']) => {
+export const getDronesService = async (data: GetDronesInput['query']) => {
     try {
-        const { page, limit } = data
-        const drones = await prisma.drones.findMany({
-            skip: (parseInt(page) - 1) * parseInt(limit),
-            take: parseInt(limit),
+        const page = parseInt(data.page || '1', 10)
+        const limit = parseInt(data.limit || '10', 10)
+        const skip = (page - 1) * limit
+        const where = {}
+        const [drones, total] = await Promise.all([
+            prisma.drones.findMany({
+                where,
+                skip,
+                take: limit,
+            }),
+            prisma.drones.count({ where }),
+        ])
+        const droneIds = drones.map((d) => d.id)
+        const ordersWithDrone = await prisma.orders.findMany({
+            where: { assigned_drone: { in: droneIds } },
+            select: { id: true, assigned_drone: true },
         })
-        return drones
+        const orderByDrone = new Map(
+            ordersWithDrone.map((o) => [o.assigned_drone, o.id])
+        )
+        const list = drones.map((d) =>
+            mapDroneToSpec(d, orderByDrone.get(d.id) ?? null)
+        )
+        return { data: list, total, page, limit }
     } catch (e) {
         throw e
     }

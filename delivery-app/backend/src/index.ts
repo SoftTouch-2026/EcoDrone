@@ -5,13 +5,15 @@ import { router } from './routes/routes'
 import cors from 'cors'
 import swaggerJsdoc from 'swagger-jsdoc'
 import swaggerUi from 'swagger-ui-express'
+import { Request, Response } from 'express'
+import { deserializer } from './middlewares/deserializer'
 
 dotenv.config()
 
 const app = express()
 app.use(express.json())
 app.use(cors())
-
+app.use(deserializer)
 // Swagger configuration
 const swaggerOptions = {
     definition: {
@@ -78,10 +80,19 @@ const swaggerOptions = {
 export const swaggerSpec = swaggerJsdoc(swaggerOptions)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
+app.get('/api-docs.json', (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/json')
+    res.send(swaggerSpec)
+})
+
 app.listen(env.PORT || 5400, () => {
-    console.log(`server started at ${env.PORT}`)
-    console.log(
-        `Swagger docs available at http://localhost:${env.PORT}/api-docs`
-    )
-    router(app)
+    try {
+        console.log(`server started at ${env.PORT}`)
+        console.log(
+            `Swagger docs available at http://localhost:${env.PORT}/api-docs`
+        )
+        router(app)
+    } catch (e) {
+        console.log(`error starting server ${e}`)
+    }
 })

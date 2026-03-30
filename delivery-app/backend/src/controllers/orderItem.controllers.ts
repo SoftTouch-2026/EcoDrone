@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+import { sendError } from '../utils/errorResponse'
 import {
     CreateOrderItemInput,
     UpdateOrderItemInput,
@@ -20,7 +21,7 @@ export const handleCreateOrderItemRequest = async (
         const orderItem = await createOrderItemService(req.body)
         return res.status(201).send(orderItem)
     } catch (e) {
-        return res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
 
@@ -32,7 +33,7 @@ export const handleUpdateOrderItemRequest = async (
         const orderItem = await updateOrderItemService(req.body)
         return res.status(200).send(orderItem)
     } catch (e) {
-        return res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
 
@@ -44,7 +45,7 @@ export const handleDeleteOrderItemRequest = async (
         const orderItem = await deleteOrderItemService(req.params)
         return res.status(200).send(orderItem)
     } catch (e) {
-        return res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
 
@@ -56,6 +57,6 @@ export const handleGetOrderItemsRequest = async (
         const orderItems = await getOrderItemsService(req.params)
         return res.status(200).send(orderItems)
     } catch (e) {
-        return res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }

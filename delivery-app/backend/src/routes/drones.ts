@@ -17,6 +17,7 @@ import {
     AssignDroneSchema,
 } from '../schemas/drones.schemas'
 import { requireUser } from '../middlewares/requireUser'
+import { requireAdmin } from '../middlewares/requireAdmin'
 
 export const droneRoutes = () => {
     const router = Router()
@@ -29,6 +30,7 @@ export const droneRoutes = () => {
      *       - Drones
      *     summary: Create a new drone
      *     description: Register a new drone in the system with serial number and battery level
+     *     operationId: handleCreateDroneRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -76,6 +78,7 @@ export const droneRoutes = () => {
      */
     router.post('/createDrone', [
         requireUser,
+        requireAdmin,
         validateResource(CreateDroneSchema),
         handleCreateDroneRequest,
     ])
@@ -88,6 +91,7 @@ export const droneRoutes = () => {
      *       - Drones
      *     summary: Update drone battery level
      *     description: Update the battery level of an existing drone
+     *     operationId: handleUpdateDroneRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -118,22 +122,24 @@ export const droneRoutes = () => {
      */
     router.post('/updateDrone', [
         requireUser,
+        requireAdmin,
         validateResource(UpdateDroneSchema),
         handleUpdateDroneRequest,
     ])
 
     /**
      * @openapi
-     * /drones/deleteDrone:
+     * /drones/deleteDrone/{id}:
      *   delete:
      *     tags:
      *       - Drones
      *     summary: Delete a drone
      *     description: Remove a drone from the system
+     *     operationId: handleDeleteDroneRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
+     *       - in: path
      *         name: id
      *         required: true
      *         schema:
@@ -147,8 +153,9 @@ export const droneRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.delete('/deleteDrone', [
+    router.delete('/deleteDrone/:id', [
         requireUser,
+        requireAdmin,
         validateResource(DeleteDroneSchema),
         handleDeleteDroneRequest,
     ])
@@ -161,6 +168,7 @@ export const droneRoutes = () => {
      *       - Drones
      *     summary: Assign drone to order
      *     description: Assign an available drone to a specific order
+     *     operationId: handleAssignDroneRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -189,22 +197,24 @@ export const droneRoutes = () => {
      */
     router.post('/assignDrone', [
         requireUser,
+        requireAdmin,
         validateResource(AssignDroneSchema),
         handleAssignDroneRequest,
     ])
 
     /**
      * @openapi
-     * /drones/getDrone:
+     * /drones/getDrone/{id}:
      *   get:
      *     tags:
      *       - Drones
      *     summary: Get single drone
      *     description: Retrieve details of a specific drone by ID
+     *     operationId: handleGetDroneRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
+     *       - in: path
      *         name: id
      *         required: true
      *         schema:
@@ -231,7 +241,7 @@ export const droneRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.get('/getDrone', [
+    router.get('/getDrone/:id', [
         requireUser,
         validateResource(GetDroneSchema),
         handleGetDroneRequest,
@@ -245,6 +255,7 @@ export const droneRoutes = () => {
      *       - Drones
      *     summary: Get paginated list of drones
      *     description: Retrieve a paginated list of all drones in the system
+     *     operationId: handleGetDronesRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
@@ -285,11 +296,12 @@ export const droneRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.get('/getDrones', [
+    router.get(
+        '/getDrones',
         requireUser,
         validateResource(GetDronesSchema),
-        handleGetDronesRequest,
-    ])
+        handleGetDronesRequest
+    )
 
     return router
 }

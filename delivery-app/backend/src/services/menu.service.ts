@@ -9,13 +9,14 @@ import {
 
 export const createMenuService = async (data: CreateMenuInput['body']) => {
     try {
-        const { name, unit_cost, description, thumbnail } = data
+        const { name, unit_cost, description, thumbnail, vendor_id } = data
         const menu = await prisma.menu.create({
             data: {
                 name: name || '',
                 unit_cost: unit_cost || 0,
                 description: description || '',
-                thumbnail: thumbnail || '',
+                thumbnail_url: thumbnail || '',
+                ...(vendor_id != null && { vendor_id }),
             },
         })
         return menu
@@ -35,7 +36,7 @@ export const updateMenuService = async (data: UpdateMenuInput['body']) => {
                 name: name || '',
                 unit_cost: unit_cost || 0,
                 description: description || '',
-                thumbnail: thumbnail || '',
+                thumbnail_url: thumbnail || '',
             },
         })
         return menu

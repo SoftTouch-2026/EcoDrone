@@ -59,10 +59,13 @@ export const getCartByUserService = async (
     data: GetCartByUserInput['params']
 ) => {
     try {
-        const { user_id } = data
+        const { userId } = data
         const cart = await prisma.cart.findFirst({
+            orderBy: {
+                created_at: 'desc',
+            },
             where: {
-                user_id,
+                user_id: userId,
             },
             include: {
                 cart_item: {

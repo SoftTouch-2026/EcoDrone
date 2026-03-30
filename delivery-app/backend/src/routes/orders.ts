@@ -27,6 +27,7 @@ export const orderRoutes = () => {
      *       - Orders
      *     summary: Create a new order
      *     description: Create a delivery order with pickup and dropoff locations
+     *     operationId: handleCreateOrderRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -75,6 +76,7 @@ export const orderRoutes = () => {
      *       - Orders
      *     summary: Update order details
      *     description: Update pickup/dropoff locations and assigned drone for an order
+     *     operationId: handleUpdateOrderRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -113,16 +115,17 @@ export const orderRoutes = () => {
 
     /**
      * @openapi
-     * /orders/deleteOrder:
+     * /orders/deleteOrder/{id}:
      *   delete:
      *     tags:
      *       - Orders
      *     summary: Delete an order
      *     description: Remove an order from the system
+     *     operationId: handleDeleteOrderRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
+     *       - in: path
      *         name: id
      *         required: true
      *         schema:
@@ -136,7 +139,7 @@ export const orderRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.delete('/deleteOrder', [
+    router.delete('/deleteOrder/:id', [
         requireUser,
         validateResource(DeleteOrderSchema),
         handleDeleteOrderRequest,
@@ -144,16 +147,17 @@ export const orderRoutes = () => {
 
     /**
      * @openapi
-     * /orders/getOrder:
+     * /orders/getOrder/{id}:
      *   get:
      *     tags:
      *       - Orders
      *     summary: Get single order
      *     description: Retrieve details of a specific order by ID
+     *     operationId: handleGetOrderRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
+     *       - in: path
      *         name: id
      *         required: true
      *         schema:
@@ -184,7 +188,7 @@ export const orderRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.get('/getOrder', [
+    router.get('/getOrder/:id', [
         requireUser,
         validateResource(GetOrderSchema),
         handleGetOrderRequest,
@@ -198,9 +202,16 @@ export const orderRoutes = () => {
      *       - Orders
      *     summary: Get paginated list of orders
      *     description: Retrieve a paginated list of all orders
+     *     operationId: handleGetOrdersRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
+     *       - in: query
+     *         name: user_id
+     *         required: false
+     *         schema:
+     *           type: string
+     *         example: "770e8400-e29b-41d4-a716-446655440002"
      *       - in: query
      *         name: page
      *         required: true

@@ -27,6 +27,7 @@ export const locationRoutes = () => {
      *       - Locations
      *     summary: Create a new location
      *     description: Add a new delivery location with coordinates
+     *     operationId: handleCreateLocationRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -71,6 +72,7 @@ export const locationRoutes = () => {
      *       - Locations
      *     summary: Update location details
      *     description: Update coordinates and name of an existing location
+     *     operationId: handleUpdateLocationRequest
      *     security:
      *       - bearerAuth: []
      *     requestBody:
@@ -109,16 +111,17 @@ export const locationRoutes = () => {
 
     /**
      * @openapi
-     * /locations/deleteLocation:
+     * /locations/deleteLocation/{id}:
      *   delete:
      *     tags:
      *       - Locations
      *     summary: Delete a location
      *     description: Remove a location from the system
+     *     operationId: handleDeleteLocationRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
+     *       - in: path
      *         name: id
      *         required: true
      *         schema:
@@ -132,7 +135,7 @@ export const locationRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.delete('/deleteLocation', [
+    router.delete('/deleteLocation/:id', [
         requireUser,
         validateResource(DeleteLocationSchema),
         handleDeleteLocationRequest,
@@ -140,16 +143,17 @@ export const locationRoutes = () => {
 
     /**
      * @openapi
-     * /locations/getLocation:
+     * /locations/getLocation/{id}:
      *   get:
      *     tags:
      *       - Locations
      *     summary: Get single location
      *     description: Retrieve details of a specific location by ID
+     *     operationId: handleGetLocationRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:
-     *       - in: query
+     *       - in: path
      *         name: id
      *         required: true
      *         schema:
@@ -176,7 +180,7 @@ export const locationRoutes = () => {
      *       401:
      *         description: Unauthorized
      */
-    router.get('/getLocation', [
+    router.get('/getLocation/:id', [
         requireUser,
         validateResource(GetLocationSchema),
         handleGetLocationRequest,
@@ -190,6 +194,7 @@ export const locationRoutes = () => {
      *       - Locations
      *     summary: Get paginated list of locations
      *     description: Retrieve a paginated list of all locations
+     *     operationId: handleGetLocationsRequest
      *     security:
      *       - bearerAuth: []
      *     parameters:

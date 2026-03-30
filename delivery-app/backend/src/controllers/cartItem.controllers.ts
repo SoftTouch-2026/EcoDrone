@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+import { sendError } from '../utils/errorResponse'
 import {
     AddCartItemInput,
     UpdateCartItemInput,
@@ -20,7 +21,7 @@ export const handleAddCartItemRequest = async (
         const cartItem = await addCartItemService(req.body)
         return res.status(201).send(cartItem)
     } catch (e) {
-        return res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
 
@@ -32,7 +33,7 @@ export const handleUpdateCartItemRequest = async (
         const cartItem = await updateCartItemService(req.body)
         return res.status(200).send(cartItem)
     } catch (e) {
-        return res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
 
@@ -44,7 +45,7 @@ export const handleDeleteCartItemRequest = async (
         const cartItem = await deleteCartItemService(req.params)
         return res.status(200).send(cartItem)
     } catch (e) {
-        return res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
 
@@ -56,6 +57,6 @@ export const handleGetCartItemsRequest = async (
         const cartItems = await getCartItemsService(req.params)
         return res.status(200).send(cartItems)
     } catch (e) {
-        return res.status(400).send(e)
+        return sendError(res, 400, e)
     }
 }
