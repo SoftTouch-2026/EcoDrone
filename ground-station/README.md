@@ -68,11 +68,11 @@ pip install -e ../shared
 ### Running the Ground Station API
 
 ```bash
-cd ground-station/api
-python ground_station_api.py
+# Ensure you are in the ground-station directory
+DRONE_CONNECTION_MODE=wifi python3 -m uvicorn api.app:app --host 0.0.0.0 --port 5001
 ```
 
-This starts the HTTP server that listens for mission assignments from the cloud backend.
+This starts the FastAPI server that manages drone control and communication.
 
 ### Running Development Scripts
 
@@ -104,6 +104,30 @@ open ground-station/operator-interface.html
 - Mission queue management
 - Statistics dashboard
 
+### FastAPI Quick Commands
+
+#### Start Server (WiFi Mode)
+Starts the API with connection to the physical drone via SkyController.
+```bash
+DRONE_CONNECTION_MODE=wifi python3 -m uvicorn api.app:app --host 0.0.0.0 --port 5001
+```
+
+#### Start Server (Simulation Mode)
+Starts the API with connection to the Sphinx simulator.
+```bash
+DRONE_CONNECTION_MODE=simulation python3 -m uvicorn api.app:app --host 0.0.0.0 --port 5001
+```
+
+#### Stop Server
+If running in the foreground, press `Ctrl + C`.
+
+#### Kill Background Process
+If the server is stuck or running in the background, use:
+```bash
+# Finds the process ID on port 5001 and kills it
+lsof -t -i:5001 | xargs kill -9
+```
+
 ## Key Components
 
 ### `controllers/drone_controller.py`
@@ -112,7 +136,7 @@ open ground-station/operator-interface.html
 - Telemetry streaming
 - Safety checks
 
-### `api/ground_station_api.py`
+### `api/app.py`
 - HTTP endpoints for backend communication
 - Mission receipt and acknowledgment
 - Command handling (abort, pause, resume)
