@@ -16,7 +16,7 @@ logger = logging.getLogger("DeliveryController")
 try:
     import olympe
     from olympe.messages.ardrone3.Piloting import TakeOff, Landing, moveBy, moveTo
-    from olympe.messages.ardrone3.PilotingState import FlyingStateChanged, PositionChanged, AltitudeChanged, GpsLocationChanged
+    from olympe.messages.ardrone3.PilotingState import FlyingStateChanged, PositionChanged, AltitudeChanged, GpsLocationChanged, moveToChanged, AttitudeChanged
     from olympe.messages.ardrone3.GPSState import NumberOfSatelliteChanged
     from olympe.messages.common.CommonState import LinkSignalQuality
     from olympe.messages.ardrone3.GPSSettingsState import HomeChanged
@@ -37,7 +37,9 @@ class DeliveryController:
         self.link_quality = 0
         self.current_lat = 0.0
         self.current_lon = 0.0
+        self.current_amsl = 0.0
         self.current_alt = 0.0
+        self.current_yaw = 0.0
         self.flying_state = "landed"
         self.hovering_since = 0.0
         self.link_drop_since = 0.0
@@ -71,6 +73,15 @@ class DeliveryController:
                 self._start_monitoring()
                 # Enable obstacle avoidance standard
                 self.drone(set_mode(mode="standard")).wait()
+                # Configure RTH: 15m return altitude, 1s delay
+                try:
+                    from olympe.messages.rth import set_returning_altitude, set_delay, set_preferred_home_type
+                    self.drone(set_returning_altitude(altitude=15.0)).wait()
+                    self.drone(set_delay(delay=1)).wait()
+                    self.drone(set_preferred_home_type(type="pilot")).wait()
+                    logger.info("RTH configured: altitude=15m, delay=1s, pilot home")
+                except Exception as rth_e:
+                    logger.warning(f"RTH config warning: {rth_e}")
             return self.connected
         except Exception as e:
             logger.error(f"Connection failed: {e}")
@@ -100,32 +111,78 @@ class DeliveryController:
                 time.sleep(1)
                 continue
                 
+            # Update Satellites
             try:
-                # Update Satellites
                 sat_state = self.drone.get_state(NumberOfSatelliteChanged)
                 if sat_state:
                     self.satellites = sat_state.get("numberOfSatellite", 0)
-                
-                # Update GPS Position
-                gps_state = self.drone.get_state(GpsLocationChanged)
+            except Exception as e:
+                with open("/tmp/oly_errors.log", "a") as f: f.write(f"Sat error: {repr(e)}\n")
+            
+            # Update GPS Position
+            try:
+                gps_state = self.drone.get_state(PositionChanged)
                 if gps_state:
                     self.current_lat = gps_state.get("latitude", 0.0)
                     self.current_lon = gps_state.get("longitude", 0.0)
-                    self.current_alt = gps_state.get("altitude", 0.0)
-                
-                # Update Flying State
+                    self.current_amsl = gps_state.get("altitude", 0.0)
+                    
+                # Fallback if PositionChanged isn't supported or returned 0.0
+                if self.current_lat == 0.0:
+                    backup_state = self.drone.get_state(GpsLocationChanged)
+                    if backup_state:
+                        self.current_lat = backup_state.get("latitude", 0.0)
+                        self.current_lon = backup_state.get("longitude", 0.0)
+                        self.current_amsl = backup_state.get("altitude", 0.0)
+
+            except Exception as e:
+                with open("/tmp/oly_errors.log", "a") as f: f.write(f"Pos error: {repr(e)}\n")
+                # Immediate fallback in exception
+                try:
+                    backup_state = self.drone.get_state(GpsLocationChanged)
+                    if backup_state:
+                        self.current_lat = backup_state.get("latitude", 0.0)
+                        self.current_lon = backup_state.get("longitude", 0.0)
+                        self.current_amsl = backup_state.get("altitude", 0.0)
+                except:
+                    pass
+            
+            # Update Relative Altitude
+            try:
+                alt_state = self.drone.get_state(AltitudeChanged)
+                if alt_state:
+                    self.current_alt = alt_state.get("altitude", self.current_alt)
+            except Exception as e:
+                pass
+            
+            # Update Attitude
+            try:
+                att_state = self.drone.get_state(AttitudeChanged)
+                if att_state:
+                    self.current_yaw = att_state.get("yaw", 0.0)
+            except Exception as e:
+                pass
+            
+            # Update Flying State
+            try:
                 fly_state = self.drone.get_state(FlyingStateChanged)
                 if fly_state:
                     new_state = fly_state.get("state", "landed")
                     if new_state == "hovering" and self.flying_state != "hovering":
                         self.hovering_since = time.time()
                     self.flying_state = new_state
-                
-                # Update Link Quality
+            except Exception as e:
+                with open("/tmp/oly_errors.log", "a") as f: f.write(f"Fly error: {repr(e)}\n")
+            
+            # Update Link Quality
+            try:
                 link_state = self.drone.get_state(LinkSignalQuality)
                 if link_state:
                     self.link_quality = link_state.get("quality", 4) # 0-4 scale usually
-                
+            except Exception as e:
+                with open("/tmp/oly_errors.log", "a") as f: f.write(f"Link error: {repr(e)}\n")
+            
+            try:
                 # Heartbeat failsafe: Link drop > 5s
                 if self.link_quality < 2:
                     if self.link_drop_since == 0:
@@ -135,9 +192,8 @@ class DeliveryController:
                         self.abort_mission()
                 else:
                     self.link_drop_since = 0.0
-
             except Exception as e:
-                logger.error(f"Telemetry error: {e}")
+                with open("/tmp/oly_errors.log", "a") as f: f.write(f"Failsafe error: {repr(e)}\n")
             
             time.sleep(0.5)
 
@@ -170,6 +226,87 @@ class DeliveryController:
             time.sleep(0.5)
         return False
 
+    def _wait_for_gps_stable(
+        self,
+        window: int = 20,
+        threshold_m: float = 5.0,
+        timeout_s: float = 180.0,
+        abort_check: bool = True,
+    ) -> bool:
+        """
+        Block until GPS coordinates are stable (EKF converged).
+
+        Samples the current position every 0.5 s and considers the fix stable
+        once the spread (max–min) across the last `window` samples is under
+        `threshold_m` metres for both latitude and longitude.  This guards
+        against the ~32 km cold-start offset seen immediately after connection
+        even when 20+ satellites are already reported.
+
+        Args:
+            window:      Number of consecutive samples to evaluate (default 20 = 10 s).
+            threshold_m: Max allowed spread in metres (default 5 m).
+            timeout_s:   Give up after this many seconds (default 180 s).
+            abort_check: If True, also return False on mission_aborted.
+
+        Returns:
+            True when stable, False on timeout or mission abort.
+        """
+        # 1 degree latitude  ≈ 111 139 m
+        # 1 degree longitude ≈ 111 139 * cos(lat) m
+        LAT_M_PER_DEG = 111_139.0
+
+        logger.info(
+            f"Waiting for GPS EKF convergence "
+            f"(spread < {threshold_m}m over {window * 0.5:.0f}s window) ..."
+        )
+
+        history_lat: list = []
+        history_lon: list = []
+        deadline = time.time() + timeout_s
+
+        while time.time() < deadline:
+            if abort_check and self.mission_aborted:
+                return False
+
+            lat = self.current_lat
+            lon = self.current_lon
+
+            # Discard 0,0 – drone hasn't reported a fix yet
+            if lat != 0.0 and lon != 0.0:
+                history_lat.append(lat)
+                history_lon.append(lon)
+
+            if len(history_lat) >= window:
+                # Keep only the most recent window
+                history_lat = history_lat[-window:]
+                history_lon = history_lon[-window:]
+
+                lat_spread_m = (max(history_lat) - min(history_lat)) * LAT_M_PER_DEG
+                lon_spread_m = (
+                    (max(history_lon) - min(history_lon))
+                    * LAT_M_PER_DEG
+                    * math.cos(math.radians(sum(history_lat) / len(history_lat)))
+                )
+
+                logger.info(
+                    f"GPS drift – lat spread: {lat_spread_m:.2f}m, "
+                    f"lon spread: {lon_spread_m:.2f}m "
+                    f"(target < {threshold_m}m)"
+                )
+
+                if lat_spread_m < threshold_m and lon_spread_m < threshold_m:
+                    avg_lat = sum(history_lat) / len(history_lat)
+                    avg_lon = sum(history_lon) / len(history_lon)
+                    logger.info(
+                        f"GPS stable ✓  avg: {avg_lat:.7f}, {avg_lon:.7f}"
+                    )
+                    return True
+
+            time.sleep(0.5)
+
+        logger.error("GPS stability timeout – EKF did not converge in time.")
+        return False
+
     def phase_a_calibration(self) -> bool:
         """Phase A: Calibration & Initial Bias Recording"""
         logger.info("Starting Phase A: Calibration")
@@ -180,7 +317,7 @@ class DeliveryController:
             self.offset_east = 0.1
             return True
 
-        # 1. GNSS Stabilization
+        # 1. GNSS Stabilization: satellite count gate
         logger.info("Waiting for GNSS stabilization (min 14 satellites)")
         timeout = time.time() + 120.0
         while self.satellites < 14:
@@ -188,8 +325,13 @@ class DeliveryController:
                 logger.error("Failed to acquire 14 satellites.")
                 return False
             time.sleep(1)
+
+        # 2. EKF Convergence: wait until coordinates stop drifting
+        if not self._wait_for_gps_stable(window=20, threshold_m=5.0, timeout_s=180.0):
+            logger.error("GPS did not stabilize – cannot record reliable Logical Origin.")
+            return False
             
-        # 2. Logical Origin (LO) - Average over 10 seconds
+        # 3. Logical Origin (LO) - Average over 10 seconds
         logger.info("Recording Logical Origin over 10 seconds")
         lats, lons = [], []
         for _ in range(20): # 20 samples = 10 sec @ 2Hz
@@ -202,7 +344,7 @@ class DeliveryController:
         lo_lat, lo_lon = self.logical_origin
         logger.info(f"Logical Origin: {lo_lat}, {lo_lon}")
 
-        # 3. Calibration Hop
+        # 4. Calibration Hop
         logger.info("Executing Calibration Hop to 5m")
         self.drone(TakeOff() >> FlyingStateChanged(state="hovering", _timeout=30)).wait()
         
@@ -211,7 +353,7 @@ class DeliveryController:
 
         logger.info("Moving back to exact Logical Origin coordinates")
         # Go to LO at 5m
-        self.drone(moveTo(lo_lat, lo_lon, 5.0, 0) >> PositionChanged(_timeout=30)).wait()
+        self.drone(moveTo(lo_lat, lo_lon, 5.0, 0, 0) >> moveToChanged(status="DONE", _timeout=3600)).wait()
         
         if not self._state_check_wait(min_hover_time=3.0):
             return False
@@ -228,6 +370,52 @@ class DeliveryController:
         
         logger.info(f"Initial Bias recorded: N={self.offset_north:.2f}m, E={self.offset_east:.2f}m")
         return True
+
+    def survey_location(self) -> dict:
+        """Survey current location using high-precision averaging (min 14 satellites)"""
+        logger.info("Starting High-Precision Location Survey")
+        
+        if not self.drone:
+            return {"success": False, "message": "Drone not connected"}
+            
+        if not OLYMPE_AVAILABLE:
+            return {"success": True, "latitude": 5.7597, "longitude": -0.2199, "satellites": 14}
+            
+        # 1. GNSS Stabilization: satellite count gate
+        logger.info("Waiting for GNSS stabilization (min 14 satellites)")
+        timeout = time.time() + 120.0
+        while self.satellites < 14:
+            if time.time() > timeout:
+                logger.error(f"Survey timeout. Stuck at {self.satellites} satellites.")
+                return {"success": False, "message": "Failed to acquire 14 satellites for survey"}
+            logger.info(f"Satellites locked: {self.satellites}/14 ...")
+            time.sleep(1)
+
+        # 2. EKF Convergence: wait until coordinates stop drifting
+        #    GPS can report positions ~32km off right after connection even with
+        #    20+ satellites locked. Only trust coordinates once the spread across
+        #    a 10-second window is under 5 m.
+        if not self._wait_for_gps_stable(window=20, threshold_m=5.0, timeout_s=180.0, abort_check=False):
+            return {"success": False, "message": "GPS did not stabilize – EKF convergence timeout"}
+            
+        # 2. Average over 10 seconds
+        logger.info("Recording precise coordinates over 10 seconds...")
+        lats, lons = [], []
+        for _ in range(20): # 20 samples = 10 sec @ 2Hz
+            lats.append(self.current_lat)
+            lons.append(self.current_lon)
+            time.sleep(0.5)
+            
+        surveyed_lat = sum(lats)/len(lats)
+        surveyed_lon = sum(lons)/len(lons)
+        
+        return {
+            "success": True, 
+            "latitude": surveyed_lat, 
+            "longitude": surveyed_lon,
+            "satellites": self.satellites,
+            "altitude": self.current_amsl
+        }
 
     def phase_b_transit(self, waypoints: List[Tuple[float, float]], cruise_alt: float = 35.0) -> bool:
         """Phase B: Global Transit (High Altitude)"""
@@ -252,7 +440,7 @@ class DeliveryController:
             if self.mission_aborted: return False
             
             logger.info(f"Navigating to waypoint {i+1}/{len(waypoints)}: {wp}")
-            self.drone(moveTo(wp[0], wp[1], cruise_alt, 0) >> PositionChanged(_timeout=60)).wait()
+            self.drone(moveTo(wp[0], wp[1], cruise_alt, 0, 0) >> moveToChanged(status="DONE", _timeout=3600)).wait()
             
             if not self._state_check_wait():
                 return False
@@ -299,14 +487,15 @@ class DeliveryController:
 
         # 2. Reverse Move (Inertial/Optical flow correction)
         logger.info(f"Applying inertial offset cancellation: N={-self.offset_north:.2f}m, E={-self.offset_east:.2f}m")
-        # MoveBy coordinates: forward (North), right (East), down (Up)
-        # Note: moveBy works relative to drone heading. Assuming heading is 0 (North) for simplicity in this logic, 
-        # or we calculate relative to current heading. Olympe moveTo heading can be used.
-        # For accurate reverse move in global frame we must account for current yaw.
-        # Simplified: drone is facing North (heading 0).
-        forward_move = -self.offset_north
-        right_move = -self.offset_east
+        # Rotate global offsets (North/East) into the drone's local coordinate frame using current yaw
+        global_north_offset = -self.offset_north
+        global_east_offset = -self.offset_east
+        yaw = self.current_yaw
         
+        forward_move = (global_north_offset * math.cos(yaw)) + (global_east_offset * math.sin(yaw))
+        right_move = (global_east_offset * math.cos(yaw)) - (global_north_offset * math.sin(yaw))
+        
+        logger.info(f"Local rotated move vector -> Forward: {forward_move:.2f}m, Right: {right_move:.2f}m")
         result = self.drone(moveBy(forward_move, right_move, 0, 0)).wait()
         
         if not result.success():

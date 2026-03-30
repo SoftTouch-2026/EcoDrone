@@ -26,9 +26,11 @@ logger = logging.getLogger("EcoDrone")
 try:
     import olympe
     from olympe.messages.ardrone3.Piloting import TakeOff, Landing, moveBy, moveTo
-    from olympe.messages.ardrone3.PilotingState import FlyingStateChanged, PositionChanged
+    from olympe.messages.ardrone3.PilotingState import (
+        FlyingStateChanged, moveToChanged, AltitudeChanged, GpsLocationChanged
+    )
     from olympe.messages.common.CommonState import BatteryStateChanged
-    from olympe.messages.ardrone3.PilotingState import AltitudeChanged
+    from olympe.messages.obstacle_avoidance import set_mode as oa_set_mode
     OLYMPE_AVAILABLE = True
     logger.info("Olympe SDK loaded successfully")
 except ImportError:
@@ -84,7 +86,7 @@ class DroneStatus:
             "connected": self.connected,
             "connection_mode": self.connection_mode,
             "drone_model": self.drone_model,
-            "last_updated": self.last_updated,
+            "last_updated": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.last_updated)),
             "olympe_available": OLYMPE_AVAILABLE
         }
 
@@ -294,6 +296,23 @@ class ParrotANAFIController:
                     self.status.connection_mode = self.connection_mode.value
                     self.status.message = "Connected to ANAFI Ai"
                 
+                # Enable obstacle avoidance (activates GPS position-hold, stops hover drift)
+                try:
+                    self.drone(oa_set_mode(mode="standard")).wait()
+                    logger.info("Obstacle avoidance (standard) enabled")
+                except Exception as oa_e:
+                    logger.warning(f"Obstacle avoidance config warning: {oa_e}")
+
+                # Configure RTH safety (imported lazily — message names vary by firmware)
+                try:
+                    from olympe.messages.rth import set_returning_altitude, set_delay, set_preferred_home_type
+                    self.drone(set_returning_altitude(altitude=15.0)).wait()
+                    self.drone(set_delay(delay=1)).wait()
+                    self.drone(set_preferred_home_type(type="pilot")).wait()
+                    logger.info("RTH configured: 15m altitude, 1s delay, pilot home")
+                except Exception as rth_e:
+                    logger.warning(f"RTH config warning: {rth_e}")
+
                 # Start status update thread
                 self._start_status_updates()
                 
@@ -358,10 +377,15 @@ class ParrotANAFIController:
             ).wait()
             
             if result.success():
+                # Wait for GPS position-hold to stabilize before declaring hover ready.
+                # Without this pause, a subsequent moveTo may get RUNNING but then stall
+                # because the flight controller hasn't locked its GPS hold yet.
+                logger.info("Hovering - waiting 5s for GPS position-hold to stabilize...")
+                time.sleep(5)
                 with self._lock:
                     self.status.state = DroneState.HOVERING
                     self.status.message = f"Hovering at altitude"
-                logger.info("Takeoff successful")
+                logger.info("Takeoff + GPS stabilization complete")
                 return {"success": True, "message": "Takeoff successful - now hovering"}
             else:
                 with self._lock:
@@ -433,11 +457,26 @@ class ParrotANAFIController:
                         with self._lock:
                             self.status.battery_level = battery_state.get("percent", 0)
                     
-                    # Get altitude
+                    # Get relative altitude above takeoff
                     altitude_state = self.drone.get_state(AltitudeChanged)
                     if altitude_state:
                         with self._lock:
                             self.status.altitude = altitude_state.get("altitude", 0)
+
+                    # Get live GPS position
+                    try:
+                        gps_state = self.drone.get_state(GpsLocationChanged)
+                        if gps_state:
+                            lat = gps_state.get("latitude", 0.0)
+                            lon = gps_state.get("longitude", 0.0)
+                            # Only update when we have a real fix (skip 0,0 and
+                            # extreme cold-start offsets by requiring lat > 1)
+                            if lat != 0.0 and lon != 0.0 and abs(lat) > 1.0:
+                                with self._lock:
+                                    self.status.latitude = lat
+                                    self.status.longitude = lon
+                    except Exception:
+                        pass
                     
                     # Get flying state
                     flying_state = self.drone.get_state(FlyingStateChanged)
@@ -467,15 +506,37 @@ class ParrotANAFIController:
         
         if self.status.state not in [DroneState.HOVERING, DroneState.FLYING]:
             return {"success": False, "message": f"Drone must be in flight. Current state: {self.status.state.value}"}
+            
+        # --- SAFETY GEOFENCE & ALTITUDE CHECKS ---
+        import math
+        R = 6371e3 # Earth radius in meters
+        phi1 = math.radians(self.status.latitude)
+        phi2 = math.radians(latitude)
+        delta_phi = math.radians(latitude - self.status.latitude)
+        delta_lambda = math.radians(longitude - self.status.longitude)
+        a = math.sin(delta_phi/2.0)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda/2.0)**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+        distance = R * c
+        
+        if distance > 500:
+            msg = f"Geofence Error: Distance {distance:.1f}m exceeds 500m safety limit."
+            logger.warning(msg)
+            return {"success": False, "message": msg}
+            
+        if altitude < 3.0:
+            logger.warning(f"Altitude {altitude}m unsafe for travel. Bumping to 3.0m.")
+            altitude = 3.0
+        # ----------------------------------------
         
         try:
             with self._lock:
                 self.status.state = DroneState.FLYING
                 self.status.message = f"Navigating to {latitude}, {longitude}..."
             
+            # Wait for either DONE or CANCELED (which happens on final transition or mode switch)
             result = self.drone(
-                moveTo(latitude, longitude, altitude, 0)
-                >> PositionChanged(_timeout=60)
+                moveTo(latitude, longitude, altitude, 0, 0)
+                >> (moveToChanged(status="DONE", _timeout=3600) | moveToChanged(status="CANCELED", _timeout=3600))
             ).wait()
             
             if result.success():
@@ -488,10 +549,12 @@ class ParrotANAFIController:
                 logger.info(f"Navigation to {latitude}, {longitude} successful")
                 return {"success": True, "message": f"Arrived at lat={latitude}, lng={longitude}"}
             else:
+                detailed_error = result.explain() if hasattr(result, 'explain') else "Unknown"
                 with self._lock:
                     self.status.state = DroneState.HOVERING
-                    self.status.message = "Navigation failed"
-                return {"success": False, "message": "Navigation command failed"}
+                    self.status.message = f"Navigation failed: {detailed_error}"
+                logger.error(f"Navigation command failed: {detailed_error}")
+                return {"success": False, "message": f"Navigation command failed: {detailed_error}"}
                 
         except Exception as e:
             logger.error(f"Navigation error: {e}")

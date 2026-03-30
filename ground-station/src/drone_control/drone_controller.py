@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Optional
 import olympe
 from olympe.messages.ardrone3.Piloting import TakeOff, Landing, moveBy, moveTo
-from olympe.messages.ardrone3.PilotingState import FlyingStateChanged, PositionChanged
+from olympe.messages.ardrone3.PilotingState import FlyingStateChanged, PositionChanged, moveToChanged
 from olympe.messages.common.CommonState import BatteryStateChanged
 
 from models.drone_model import Drone
@@ -108,8 +108,14 @@ class DroneController:
         
         print(f"\n📍 Navigating to Lat {latitude }, Lon {longitude}, Alt {altitude}m...")
         try:
-            success = self.olympe_drone(moveTo(latitude, longitude, altitude, 0) >> PositionChanged(_timeout=30)).wait().success()
-            if success:
+            # Orientation mode 0 (TO_TARGET), heading 0
+            # Wait for either DONE or CANCELED
+            result = self.olympe_drone(
+                moveTo(latitude, longitude, altitude, 0, 0) 
+                >> (moveToChanged(status="DONE", _timeout=3600) | moveToChanged(status="CANCELED", _timeout=3600))
+            ).wait()
+            
+            if result.success():
                 print(f"✓ Navigation successful")
                 self.drone.update_location(latitude, longitude, altitude)
                 return True

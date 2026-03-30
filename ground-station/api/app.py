@@ -215,10 +215,16 @@ def start_delivery(body: DeliveryMissionRequest, background_tasks: BackgroundTas
     if delivery.connected or delivery.drone:
         return ApiResponse(success=False, message="Delivery mission already running or controller connected.")
     
-    # We must connect first before doing the flight logic
-    connected = delivery.connect()
-    if not connected:
-        return ApiResponse(success=False, message="Failed to connect DeliveryController to drone.")
+    # Share Olympe connection if standard drone controller is connected
+    if hasattr(drone, "drone") and drone.drone is not None and not delivery.connected:
+        delivery.drone = drone.drone
+        delivery.connected = True
+        delivery._start_monitoring()
+        
+    if not delivery.connected:
+        connected = delivery.connect()
+        if not connected:
+            return ApiResponse(success=False, message="Failed to connect DeliveryController to drone.")
         
     background_tasks.add_task(delivery.execute_delivery, body.waypoints)
     return ApiResponse(success=True, message="Delivery mission started in the background")
@@ -232,6 +238,32 @@ def abort_delivery():
         return ApiResponse(success=True, message="Manual override triggered, mission aborted.")
     except Exception as e:
         logger.error(f"Abort error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/survey", response_model=ApiResponse)
+def survey_location():
+    """Trigger the Survey Mode to get highly accurate current GPS coordinates"""
+    try:
+        # Share Olympe connection if standard drone controller is connected
+        if hasattr(drone, "drone") and drone.drone is not None and not delivery.connected:
+            delivery.drone = drone.drone
+            delivery.connected = True
+            delivery._start_monitoring()
+            
+        if not delivery.connected and not delivery.drone:
+            connected = delivery.connect()
+            if not connected:
+                return ApiResponse(success=False, message="Failed to connect to drone for survey.")
+        
+        result = delivery.survey_location()
+        return ApiResponse(
+            success=result.get("success", False), 
+            message=result.get("message", "Survey complete"), 
+            data=result
+        )
+    except Exception as e:
+        logger.error(f"Survey error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
