@@ -1,0 +1,53 @@
+Archer Cornfield Lower
+Latitude:   5.759765224999998
+Longitude:  -0.220046349999447
+Altitude:   354.7980041503906 m
+Satellites: 17 locked
+
+Archer Cornfield Upper
+Latitude:   5.759706599999595
+Longitude:  -0.21993844499989734
+Altitude:   355.8009948730469 m
+Satellites: 18 locked
+
+CS Department
+Latitude:   5.7595037799990365
+Longitude:  -0.21953943500055573
+Altitude:   356.0669860839844 m
+Satellites: 17 locked
+
+Cafeteria
+Latitude:   5.758543319994385
+Longitude:  -0.21985313000163842
+Altitude:   361.5530090332031 m
+Satellites: 21 locked
+
+Hostels Generator
+Latitude:   5.758129449971031
+Longitude:  -0.22017107999947996
+Altitude:   359.36700439453125 m
+Satellites: 19 locked
+
+Hostel-2E Rooftop
+Latitude:   5.757190170016988
+Longitude:  -0.22101232998781767
+Altitude:   351.3909912109375 m
+Satellites: 22 locked
+
+Hostel-2D Rooftop
+Latitude:   5.7575989699940315
+Longitude:  -0.22124015000929376
+Altitude:   346.1929931640625 m
+Satellites: 19 locked
+
+Hostel-KT Rooftop
+Latitude:   5.758115784999068
+Longitude:  -0.22114700997528586
+Altitude:   344.239990234375 m
+Satellites: 21 locked
+
+Munchies - Student Car Park
+Latitude:   5.758773105004581
+Longitude:  -0.2211355499960092
+Altitude:   339.6319885253906 m
+Satellites: 15 locked
