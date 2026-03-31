@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Tuple
 from drone_controller import get_drone_controller, OLYMPE_AVAILABLE
 from delivery_controller import DeliveryController
+from cloud_client import CloudClient
 import logging
 import uvicorn
 
@@ -47,6 +48,12 @@ if CONNECTION_MODE == "simulation":
 elif CONNECTION_MODE == "skycontroller":
     delivery_ip = "192.168.53.1"
 delivery = DeliveryController(ip_address=delivery_ip)
+
+# Cloud Integration setup
+CLOUD_API_URL = os.environ.get("CLOUD_API_URL", "http://localhost:3000")
+DRONE_ID = os.environ.get("DRONE_ID", "DRN-001-2024")
+SERVICE_SECRET = os.environ.get("SERVICE_SECRET", "eco_drone_ground_auth_v1_xyz")
+cloud_client = CloudClient(delivery, CLOUD_API_URL, DRONE_ID, SERVICE_SECRET)
 
 
 # ───────────────── Request / Response Models ─────────────────
@@ -84,6 +91,17 @@ def _parse_result(result, default_message: str) -> tuple[bool, str]:
     return bool(result), default_message if result else f"{default_message} failed"
 
 
+# ───────────────── Lifecycle ─────────────────
+
+@app.on_event("startup")
+async def startup_event():
+    await cloud_client.start()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await cloud_client.stop()
+
+
 # ───────────────── Endpoints ─────────────────
 
 @app.get("/")
@@ -97,6 +115,26 @@ def get_status():
         status = drone.get_status()
         return ApiResponse(success=True, data=status)
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/telemetry", response_model=ApiResponse)
+def get_telemetry():
+    try:
+        data = {
+            "latitude": delivery.current_lat,
+            "longitude": delivery.current_lon,
+            "altitude": delivery.current_amsl,
+            "heading": delivery.current_yaw,
+            "speed_kmh": 0.0,
+            "battery": getattr(delivery.drone, "battery_level", 0) if hasattr(delivery, "drone") else 100,
+            "status": getattr(delivery, "flying_state", "landed"),
+            "sats": delivery.satellites,
+            "signal": delivery.link_quality
+        }
+        return ApiResponse(success=True, data=data)
+    except Exception as e:
+        logger.error(f"Telemetry error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

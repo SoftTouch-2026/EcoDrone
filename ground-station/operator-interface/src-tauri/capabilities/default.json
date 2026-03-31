@@ -5,6 +5,11 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "opener:default"
+    "opener:default",
+    "shell:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [{ "name": "docker", "cmd": "docker", "args": ["compose", "up", "-d"] }]
+    }
   ]
 }
