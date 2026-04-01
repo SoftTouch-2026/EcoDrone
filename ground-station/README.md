@@ -107,13 +107,20 @@ open ground-station/operator-interface.html
 ### FastAPI Quick Commands
 
 #### Start Server (WiFi Mode)
-Starts the API with connection to the physical drone via SkyController.
+Starts the API with direct WiFi connection to the physical drone (192.168.42.1).
 ```bash
 DRONE_CONNECTION_MODE=wifi python3 -m uvicorn api.app:app --host 0.0.0.0 --port 5001
 ```
 
+#### Start Server (LTE / SkyController Mode)
+Starts the API with connection to the physical drone via SkyController 4 over USB-C (192.168.53.1). 
+**Note**: Ensure your PC is connected to the SkyController via USB-C and the controller has an active 4G/LTE connection to the drone.
+```bash
+DRONE_CONNECTION_MODE=lte python3 -m uvicorn api.app:app --host 0.0.0.0 --port 5001
+```
+
 #### Start Server (Simulation Mode)
-Starts the API with connection to the Sphinx simulator.
+Starts the API with connection to the Sphinx simulator (10.202.0.1).
 ```bash
 DRONE_CONNECTION_MODE=simulation python3 -m uvicorn api.app:app --host 0.0.0.0 --port 5001
 ```

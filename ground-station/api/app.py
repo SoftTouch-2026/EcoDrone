@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Tuple
 from drone_controller import get_drone_controller, OLYMPE_AVAILABLE
 from delivery_controller import DeliveryController
-from cloud_client import CloudClient
+from api.cloud_client import CloudClient
 import logging
 import uvicorn
 
@@ -45,7 +45,7 @@ drone = get_drone_controller(CONNECTION_MODE)
 delivery_ip = "192.168.42.1"
 if CONNECTION_MODE == "simulation":
     delivery_ip = "10.202.0.1"
-elif CONNECTION_MODE == "skycontroller":
+elif CONNECTION_MODE in ["skycontroller", "lte"]:
     delivery_ip = "192.168.53.1"
 delivery = DeliveryController(ip_address=delivery_ip)
 
@@ -54,6 +54,66 @@ CLOUD_API_URL = os.environ.get("CLOUD_API_URL", "http://localhost:3000")
 DRONE_ID = os.environ.get("DRONE_ID", "DRN-001-2024")
 SERVICE_SECRET = os.environ.get("SERVICE_SECRET", "eco_drone_ground_auth_v1_xyz")
 cloud_client = CloudClient(delivery, CLOUD_API_URL, DRONE_ID, SERVICE_SECRET)
+
+
+# ───────────────── Data ─────────────────
+
+DELIVERY_LOCATIONS = [
+    {
+        "name": "Archer Cornfield Lower",
+        "latitude": 5.759765224999998,
+        "longitude": -0.220046349999447,
+        "absolute_altitude": 354.7980041503906
+    },
+    {
+        "name": "Archer Cornfield Upper",
+        "latitude": 5.759706599999595,
+        "longitude": -0.21993844499989734,
+        "absolute_altitude": 355.8009948730469
+    },
+    {
+        "name": "CS Department",
+        "latitude": 5.7595037799990365,
+        "longitude": -0.21953943500055573,
+        "absolute_altitude": 356.0669860839844
+    },
+    {
+        "name": "Cafeteria",
+        "latitude": 5.758543319994385,
+        "longitude": -0.21985313000163842,
+        "absolute_altitude": 361.5530090332031
+    },
+    {
+        "name": "Hostels Generator",
+        "latitude": 5.758129449971031,
+        "longitude": -0.22017107999947996,
+        "absolute_altitude": 359.36700439453125
+    },
+    {
+        "name": "Hostel-2E Rooftop",
+        "latitude": 5.757190170016988,
+        "longitude": -0.22101232998781767,
+        "absolute_altitude": 351.3909912109375
+    },
+    {
+        "name": "Hostel-2D Rooftop",
+        "latitude": 5.7575989699940315,
+        "longitude": -0.22124015000929376,
+        "absolute_altitude": 346.1929931640625
+    },
+    {
+        "name": "Hostel-KT Rooftop",
+        "latitude": 5.758115784999068,
+        "longitude": -0.22114700997528586,
+        "absolute_altitude": 344.239990234375
+    },
+    {
+        "name": "Munchies - Student Car Park",
+        "latitude": 5.758773105004581,
+        "longitude": -0.2211355499960092,
+        "absolute_altitude": 339.6319885253906
+    }
+]
 
 
 # ───────────────── Request / Response Models ─────────────────
@@ -73,6 +133,10 @@ class MoveRequest(BaseModel):
 
 class DeliveryMissionRequest(BaseModel):
     waypoints: List[Tuple[float, float]] = Field(..., description="List of (latitude, longitude) tuples")
+
+
+class UShapeMissionRequest(BaseModel):
+    location_name: str = Field(..., description="Name of the delivery location")
 
 
 class ApiResponse(BaseModel):
@@ -107,6 +171,15 @@ async def shutdown_event():
 @app.get("/")
 def index():
     return {"name": "EcoDrone API", "version": "1.0.0", "status": "running"}
+
+
+@app.get("/api/locations", response_model=ApiResponse)
+def get_locations():
+    """Get all available delivery locations"""
+    return ApiResponse(
+        success=True,
+        data={"locations": DELIVERY_LOCATIONS}
+    )
 
 
 @app.get("/api/status", response_model=ApiResponse)
@@ -277,6 +350,32 @@ def abort_delivery():
     except Exception as e:
         logger.error(f"Abort error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/delivery/ushape", response_model=ApiResponse)
+def start_ushape(body: UShapeMissionRequest, background_tasks: BackgroundTasks):
+    """Start a U-Shape delivery mission"""
+    loc = next((l for l in DELIVERY_LOCATIONS if l["name"] == body.location_name), None)
+    if not loc:
+        return ApiResponse(success=False, message="Location not found")
+        
+    if delivery._in_flight:
+        return ApiResponse(success=False, message="A delivery mission is already in progress.")
+    
+    # Share Olympe connection from drone controller if available
+    if hasattr(drone, "drone") and drone.drone is not None:
+        delivery.drone = drone.drone
+        delivery.connected = True
+        if not delivery._monitor_thread or not delivery._monitor_thread.is_alive():
+            delivery._start_monitoring()
+        
+    if not delivery.connected:
+        connected = delivery.connect()
+        if not connected:
+            return ApiResponse(success=False, message="Failed to connect DeliveryController to drone.")
+            
+    background_tasks.add_task(delivery.execute_ushape_delivery, loc)
+    return ApiResponse(success=True, message=f"U-Shape mission to {body.location_name} started in background.")
 
 
 @app.post("/api/survey", response_model=ApiResponse)

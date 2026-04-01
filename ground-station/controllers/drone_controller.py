@@ -279,12 +279,29 @@ class ParrotANAFIController:
             return {"success": False, "message": "Olympe SDK not installed"}
         
         try:
+            # Clean up any existing connection before creating a new one
+            if self.drone is not None:
+                try:
+                    self._stop_status_updates.set()
+                    self.drone.disconnect()
+                except Exception:
+                    pass
+                self.drone = None
+                with self._lock:
+                    self.status.connected = False
+                    self.status.state = DroneState.DISCONNECTED
+                # Wait for Olympe's internal MUX/USB pipe to fully release
+                time.sleep(1)
+
             with self._lock:
                 self.status.state = DroneState.CONNECTING
                 self.status.message = f"Connecting to {self.drone_ip}..."
             
-            # Create drone instance
-            self.drone = olympe.Drone(self.drone_ip)
+            # Create proper instance based on connection mode
+            if self.connection_mode == ConnectionMode.SKYCONTROLLER:
+                self.drone = olympe.SkyController4(self.drone_ip)
+            else:
+                self.drone = olympe.Drone(self.drone_ip)
             
             # Attempt connection
             success = self.drone.connect()
@@ -295,27 +312,42 @@ class ParrotANAFIController:
                     self.status.state = DroneState.CONNECTED
                     self.status.connection_mode = self.connection_mode.value
                     self.status.message = "Connected to ANAFI Ai"
-                
-                # Enable obstacle avoidance (activates GPS position-hold, stops hover drift)
+
+                # Allow 3s for the SC4 to deliver the initial drone state burst
+                logger.info("Waiting 3s for initial state burst...")
+                time.sleep(3)
+
+                # Enable obstacle avoidance
                 try:
                     self.drone(oa_set_mode(mode="standard")).wait()
                     logger.info("Obstacle avoidance (standard) enabled")
                 except Exception as oa_e:
                     logger.warning(f"Obstacle avoidance config warning: {oa_e}")
 
-                # Configure RTH safety (imported lazily — message names vary by firmware)
+                # Configure RTH safety
                 try:
                     from olympe.messages.rth import set_returning_altitude, set_delay, set_preferred_home_type
-                    self.drone(set_returning_altitude(altitude=15.0)).wait()
+                    self.drone(set_returning_altitude(altitude=75.0)).wait()
                     self.drone(set_delay(delay=1)).wait()
                     self.drone(set_preferred_home_type(type="pilot")).wait()
-                    logger.info("RTH configured: 15m altitude, 1s delay, pilot home")
+                    logger.info("RTH configured: 75m altitude, 1s delay, pilot home")
                 except Exception as rth_e:
                     logger.warning(f"RTH config warning: {rth_e}")
 
                 # Start status update thread
                 self._start_status_updates()
-                
+
+                # Log live battery if available
+                try:
+                    batt = self.drone.get_state(BatteryStateChanged)
+                    if batt and batt.get("percent", 0) > 0:
+                        pct = batt.get("percent", 0)
+                        logger.info(f"Live telemetry ready. Battery: {pct}%")
+                        with self._lock:
+                            self.status.battery_level = float(pct)
+                except Exception:
+                    pass
+
                 logger.info("Successfully connected to drone")
                 return {"success": True, "message": "Connected to ANAFI Ai"}
             else:
@@ -369,17 +401,31 @@ class ParrotANAFIController:
             with self._lock:
                 self.status.state = DroneState.TAKING_OFF
                 self.status.message = "Taking off..."
-            
+
+            # Log current drone state before attempting takeoff
+            try:
+                fly_state = self.drone.get_state(FlyingStateChanged)
+                current_fly = fly_state.get("state", "unknown") if fly_state else "unknown"
+                logger.info(f"Pre-takeoff flying_state: {current_fly}")
+                if current_fly in ("hovering", "flying", "takingoff"):
+                    logger.info("Drone already airborne — returning success without sending TakeOff")
+                    with self._lock:
+                        self.status.state = DroneState.HOVERING
+                        self.status.message = "Hovering at altitude"
+                    return {"success": True, "message": "Takeoff successful - now hovering"}
+            except Exception as e:
+                logger.warning(f"Could not read pre-takeoff state: {e}")
+
             # Send takeoff command and wait for completion
+            # Accept either 'hovering' OR 'flying' — over LTE the ANAFI Ai sometimes
+            # skips the hovering event and transitions directly to flying.
             result = self.drone(
                 TakeOff()
-                >> FlyingStateChanged(state="hovering", _timeout=30)
+                >> (FlyingStateChanged(state="hovering", _timeout=30)
+                    | FlyingStateChanged(state="flying", _timeout=30))
             ).wait()
             
             if result.success():
-                # Wait for GPS position-hold to stabilize before declaring hover ready.
-                # Without this pause, a subsequent moveTo may get RUNNING but then stall
-                # because the flight controller hasn't locked its GPS hold yet.
                 logger.info("Hovering - waiting 5s for GPS position-hold to stabilize...")
                 time.sleep(5)
                 with self._lock:
@@ -388,6 +434,17 @@ class ParrotANAFIController:
                 logger.info("Takeoff + GPS stabilization complete")
                 return {"success": True, "message": "Takeoff successful - now hovering"}
             else:
+                # Log the full result to understand the rejection reason
+                logger.error(f"Takeoff FAILED. Result: {result}")
+                try:
+                    logger.error(f"  Exception(s): {result.exception()}")
+                except Exception:
+                    pass
+                try:
+                    fly_state = self.drone.get_state(FlyingStateChanged)
+                    logger.error(f"  Flying state after failure: {fly_state}")
+                except Exception:
+                    pass
                 with self._lock:
                     self.status.state = DroneState.ERROR
                     self.status.message = "Takeoff failed"
@@ -626,7 +683,7 @@ def get_drone_controller(mode: str = "auto"):
     
     if mode == "wifi":
         return ParrotANAFIController(ConnectionMode.WIFI_DIRECT)
-    elif mode == "skycontroller":
+    elif mode in ["skycontroller", "lte"]:
         return ParrotANAFIController(ConnectionMode.SKYCONTROLLER)
     elif mode == "sphinx":
         return ParrotANAFIController(ConnectionMode.SIMULATION)

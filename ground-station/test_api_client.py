@@ -47,6 +47,8 @@ def main():
         print(" 6 - Start Delivery Mission (Full Implementation)")
         print(" 7 - Survey Location (High Precision Campus Mapping)")
         print(" 8 - Drone Status/Telemetry")
+        print(" 9 - List Delivery Locations")
+        print(" 10 - U-Shape Delivery to Location")
         print(" q - Quit")
         
         cmd = input("\nSelect command: ").strip()
@@ -99,7 +101,7 @@ def main():
                 print("Operation cancelled.")
         elif cmd == '7':
             print("Initiating High-Precision Campus Mapping...")
-            print("The drone will attempt to lock onto 14+ satellites and average samples for 10 seconds.")
+            print("The drone will attempt to lock onto a stable GPS signal and average samples for 10 seconds.")
             print("This may take a minute or two depending on sky visibility.")
             r = requests.post(f"{API_BASE}/survey")
             print_response(r, "Survey")
@@ -117,6 +119,37 @@ def main():
         elif cmd == '8':
             r = requests.get(f"{API_BASE}/status")
             print_response(r, "Status")
+        elif cmd == '9':
+            r = requests.get(f"{API_BASE}/locations")
+            if r.status_code == 200 and r.json().get("success"):
+                locations = r.json().get("data", {}).get("locations", [])
+                print("\n📍 --- DELIVERY LOCATIONS ---")
+                for loc in locations:
+                    print(f"{loc['name']:<30} | {loc['latitude']:<12.6f} | {loc['longitude']:<12.6f} | Alt: {loc['absolute_altitude']:.2f}m")
+                print("----------------------------")
+            else:
+                print_response(r, "Locations")
+        elif cmd == '10':
+            r = requests.get(f"{API_BASE}/locations")
+            if r.status_code == 200 and r.json().get("success"):
+                locations = r.json().get("data", {}).get("locations", [])
+                print("\n📍 --- SELECT DELIVERY TARGET ---")
+                for idx, loc in enumerate(locations):
+                    print(f" {idx + 1} - {loc['name']} (Alt: {loc['absolute_altitude']:.1f}m)")
+                print(" 0 - Cancel")
+                try:
+                    choice = int(input("\nSelect location number: "))
+                    if 1 <= choice <= len(locations):
+                        selected = locations[choice - 1]
+                        print(f"Initiating U-Shape delivery to {selected['name']}...")
+                        r2 = requests.post(f"{API_BASE}/delivery/ushape", json={"location_name": selected["name"]})
+                        print_response(r2, "U-Shape Delivery")
+                    else:
+                        print("Operation cancelled.")
+                except ValueError:
+                    print("Invalid input.")
+            else:
+                print("Failed to fetch delivery locations from API.")
 
 if __name__ == "__main__":
     main()
